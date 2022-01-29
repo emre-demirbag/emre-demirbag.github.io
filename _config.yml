@@ -28,9 +28,9 @@ twitter_username: emredemirbag
 github_username:  emre-demirbag
 
 # Build settings
-theme: minima
+remote_theme: pages-themes/hacker@v0.2.0
 plugins:
-  - jekyll-feed
+- jekyll-remote-theme # add this line to the plugins list if you already have one
 
 # Exclude from processing.
 # The following items will not be processed, by default.
@@ -51,3 +51,4 @@ plugins:
 #   - vendor/cache/
 #   - vendor/gems/
 #   - vendor/ruby/
+

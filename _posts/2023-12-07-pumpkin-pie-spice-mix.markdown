@@ -7,7 +7,7 @@ categories: jekyll
 
 <img src="/assets/images/spice.jpg" alt="">
 
-How to make Pumpkin Pie Spice Mix
+How to make Pumpkin Pie Spice Mix?
 
 - 1/2 teaspon of cinnamon
 

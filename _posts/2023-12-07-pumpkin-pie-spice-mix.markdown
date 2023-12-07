@@ -7,9 +7,12 @@ categories: jekyll
 
 How to make Pumpkin Pie Spice Mix
 
-1/2 teaspon of cinnamon
-1/4 teaspon of ground ginger
-1/8 teaspon of allspice or ground cloves
-1/8 teaspon of nutmeg
+- 1/2 teaspon of cinnamon
+
+- 1/4 teaspon of ground ginger
+
+- 1/8 teaspon of allspice or ground cloves
+
+- 1/8 teaspon of nutmeg
 
 Stir to blend...

@@ -5,6 +5,7 @@ date:   2025-12-30 20:56:21 +0300
 categories: jekyll
 ---
 
+
 <h1>Reviving a Beowulf-Style Cluster (2026)</h1>
 
 <p>
@@ -19,16 +20,22 @@ and a troubleshooting panel — all client-side.
   .chips { display:flex; flex-wrap:wrap; gap:10px; margin: 10px 0 18px; }
   .chip { padding: 8px 12px; border-radius: 999px; border: 1px solid rgba(0,0,0,.08); background: rgba(0,0,0,.03); font-size: 13px; }
 
-  .grid { display:grid; grid-template-columns: 1.2fr .8fr; gap: 18px; }
+  .grid {
+    display:grid;
+    grid-template-columns: 1.2fr .8fr;
+    gap: 18px;
+    align-items: start; /* FIX: prevent uneven stretching */
+  }
   .grid > * { min-width: 0; }
   @media (max-width: 980px){ .grid { grid-template-columns: 1fr; } }
 
   .card {
     border: 1px solid rgba(0,0,0,.10);
-    border-radius:џь 18px;
+    border-radius: 18px; /* FIX: was invalid token */
     padding: 16px;
     background: white;
     box-shadow: 0 1px 0 rgba(0,0,0,.03);
+    color: #0b0b0b; /* FIX: protect against theme text color */
   }
   .muted { color: rgba(0,0,0,.68); font-size: 13px; line-height: 1.45; }
   .k { font-family: ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas, "Liberation Mono", "Courier New", monospace; }
@@ -50,6 +57,7 @@ and a troubleshooting panel — all client-side.
     border-radius: 14px;
     border: 1px solid rgba(0,0,0,.15);
     background: white;
+    color: #0b0b0b; /* FIX: theme-safe */
     outline: none;
   }
 
@@ -59,6 +67,7 @@ and a troubleshooting panel — all client-side.
     border-radius: 14px;
     border: 1px solid rgba(0,0,0,.15);
     background: white;
+    color: #0b0b0b; /* FIX: theme-safe */
     cursor: pointer;
     min-height: 40px;
     font-size: 14px;
@@ -99,7 +108,7 @@ and a troubleshooting panel — all client-side.
   .section h2 { margin-top: 6px; }
   .section h3 { margin-top: 10px; }
 
-  table { width: 100%; border-collapse: collapse; }
+  table { width: 100%; border-collapse: collapse; color: #0b0b0b; } /* FIX: theme-safe */
   th, td { padding: 10px; border-bottom: 1px solid rgba(0,0,0,.10); vertical-align: top; }
   th { text-align:left; font-size: 13px; color: rgba(0,0,0,.7); }
 
@@ -118,6 +127,7 @@ and a troubleshooting panel — all client-side.
     max-height: 86vh;
     overflow: auto;
     background: white;
+    color: #0b0b0b; /* FIX: theme-safe */
     border-radius: 18px;
     border: 1px solid rgba(0,0,0,.12);
     box-shadow: 0 10px 30px rgba(0,0,0,.25);
@@ -128,16 +138,27 @@ and a troubleshooting panel — all client-side.
     border-bottom: 1px solid rgba(0,0,0,.10);
     position: sticky; top: 0; background: white;
     z-index: 1;
+    color: #0b0b0b; /* FIX: theme-safe */
   }
   .modalHeader strong { font-size: 14px; }
-  .x { border: 1px solid rgba(0,0,0,.18); background: white; border-radius: 12px; padding: 8px 10px; cursor:pointer; }
-  .modalBody { padding: 14px; }
+  .x {
+    border: 1px solid rgba(0,0,0,.18);
+    background: white;
+    color: #0b0b0b; /* FIX: theme-safe */
+    border-radius: 12px;
+    padding: 8px 10px;
+    cursor:pointer;
+  }
+  .modalBody { padding: 14px; color: #0b0b0b; } /* FIX: theme-safe */
 
   .tabs { display:flex; flex-wrap:wrap; gap:8px; margin: 8px 0 12px; }
   .tab {
     padding: 8px 10px; border-radius: 999px;
     border: 1px solid rgba(0,0,0,.14);
-    background: white; cursor:pointer; font-size: 13px;
+    background: white;
+    color: #0b0b0b; /* FIX: theme-safe */
+    cursor:pointer;
+    font-size: 13px;
   }
   .tab.active { background: rgba(0,0,0,.04); }
 

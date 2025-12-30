@@ -5,7 +5,6 @@ date:   2025-12-30 20:56:21 +0300
 categories: jekyll
 ---
 
-<h1>Reviving a Beowulf-Style Cluster (2026)</h1>
 
 <p>
 A modern, public-safe Beowulf-style cluster guide: <strong>wolf00 (head)</strong> + <strong>wolf01..N (workers)</strong> on a private network.
@@ -16,6 +15,20 @@ and a troubleshooting panel — all client-side.
 <style>
   :root { color-scheme: light; }
   .wrap { max-width: 1100px; margin: 0 auto; }
+
+  /* FIX: keep headings sane inside the custom UI (theme-safe) */
+  .wrap h2{
+    font-size: 28px;
+    line-height: 1.18;
+    margin: 6px 0 12px;
+    letter-spacing: -0.2px;
+  }
+  .wrap h3{
+    font-size: 18px;
+    line-height: 1.25;
+    margin: 14px 0 8px;
+  }
+
   .chips { display:flex; flex-wrap:wrap; gap:10px; margin: 10px 0 18px; }
   .chip { padding: 8px 12px; border-radius: 999px; border: 1px solid rgba(0,0,0,.08); background: rgba(0,0,0,.03); font-size: 13px; }
 
@@ -26,11 +39,13 @@ and a troubleshooting panel — all client-side.
     align-items: start; /* FIX: prevent uneven stretching */
   }
   .grid > * { min-width: 0; }
-  @media (max-width: 980px){ .grid { grid-template-columns: 1fr; } }
+
+  /* FIX: iPad portrait should still show 2 columns; stack only on smaller screens */
+  @media (max-width: 780px){ .grid { grid-template-columns: 1fr; } }
 
   .card {
     border: 1px solid rgba(0,0,0,.10);
-    border-radius: 18px; /* FIX: was invalid token */
+    border-radius: 18px;
     padding: 16px;
     background: white;
     box-shadow: 0 1px 0 rgba(0,0,0,.03);
@@ -87,10 +102,12 @@ and a troubleshooting panel — all client-side.
     border-bottom: 1px solid rgba(255,255,255,.07);
     color: rgba(200,255,210,.9);
     font-size: 12px;
+    gap: 10px;
   }
-  .termbar .dots { display:flex; gap:6px; }
+  .termbar .dots { display:flex; gap:6px; flex: 0 0 auto; }
   .dot { width:10px; height:10px; border-radius:999px; background: rgba(160,255,180,.25); }
-  .termbar .title { font-weight: 600; letter-spacing:.2px; }
+  .termbar .title { font-weight: 600; letter-spacing:.2px; flex: 1 1 auto; min-width: 0; }
+  #asciiHint { flex: 0 0 auto; opacity: .9; white-space: nowrap; }
 
   pre.ascii {
     margin: 0;
@@ -197,28 +214,15 @@ and a troubleshooting panel — all client-side.
     line-height: 1.35;
   }
 
-  /* FIX: Definitions column behaves on-screen, no “random scrollbar/gutter” */
+  /* FIX: keep right column sticky without inner scrolling (prevents Safari scroll weirdness) */
   .defsCard{
     align-self: start;
     position: sticky;
     top: 14px;
-    max-height: calc(100vh - 28px); /* was 520px -> caused unnecessary inner scroll */
-    overflow: auto;
-    -webkit-overflow-scrolling: touch;
   }
-  @media (max-width: 980px){
+  @media (max-width: 780px){
     .defsCard{
       position: static;
-      max-height: none;
-      overflow: visible;
-    }
-  }
-  /* Touch devices (iPad/iPhone): sticky + overflow can look bad -> use normal page flow */
-  @media (pointer: coarse){
-    .defsCard{
-      position: static;
-      max-height: none;
-      overflow: visible;
     }
   }
 </style>
@@ -764,15 +768,13 @@ and a troubleshooting panel — all client-side.
       "# The head node's public key is authorized on workers so mpirun can ssh-launch."
     ].join("\n");
 
-    const artifacts = {
+    return {
       meta: { generatedAt: new Date().toISOString(), nodeCount: n, distro, mode, subnet },
       head: headAll,
       worker: workerAll,
       hostsBlock: hostsBlock(n),
       hostfile: workers(n).map((hn)=>`${hn} slots=1`).join("\n")
     };
-
-    return artifacts;
   }
 
   function terminalModalHTML(art) {
@@ -966,7 +968,7 @@ and a troubleshooting panel — all client-side.
     try {
       if (localStorage.getItem(key)) return;
       localStorage.setItem(key, "1");
-    } catch { /* ignore */ }
+    } catch { }
 
     const box = `
       <div class="heroModalBox">

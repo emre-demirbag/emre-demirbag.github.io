@@ -1,0 +1,1010 @@
+---
+layout: post
+title: "Reviving a Beowulf-Style Cluster (2026) — Real + VM + Hybrid"
+date:   2025-12-30 20:56:21 +0300
+categories: jekyll
+---
+
+<h1>Reviving a Beowulf-Style Cluster (2026)</h1>
+
+<p>
+A modern, public-safe Beowulf-style cluster guide: <strong>wolf00 (head)</strong> + <strong>wolf01..N (workers)</strong> on a private network.
+Works for <strong>Real</strong>, <strong>VM</strong>, and <strong>Hybrid</strong> setups. Includes an ASCII animated diagram, dynamic node-count terminal popups,
+and a troubleshooting panel — all client-side.
+</p>
+
+<style>
+  :root { color-scheme: light; }
+  .wrap { max-width: 1100px; margin: 0 auto; }
+  .chips { display:flex; flex-wrap:wrap; gap:10px; margin: 10px 0 18px; }
+  .chip { padding: 8px 12px; border-radius: 999px; border: 1px solid rgba(0,0,0,.08); background: rgba(0,0,0,.03); font-size: 13px; }
+
+  .grid { display:grid; grid-template-columns: 1.2fr .8fr; gap: 18px; }
+  .grid > * { min-width: 0; }
+  @media (max-width: 980px){ .grid { grid-template-columns: 1fr; } }
+
+  .card {
+    border: 1px solid rgba(0,0,0,.10);
+    border-radius:џь 18px;
+    padding: 16px;
+    background: white;
+    box-shadow: 0 1px 0 rgba(0,0,0,.03);
+  }
+  .muted { color: rgba(0,0,0,.68); font-size: 13px; line-height: 1.45; }
+  .k { font-family: ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas, "Liberation Mono", "Courier New", monospace; }
+
+  .controls {
+    display:grid;
+    grid-template-columns: 1fr 1fr 1fr 1fr;
+    gap: 10px;
+    align-items:end;
+    margin: 12px 0 10px;
+  }
+  @media (max-width: 980px){ .controls { grid-template-columns: 1fr 1fr; } }
+  @media (max-width: 560px){ .controls { grid-template-columns: 1fr; } }
+
+  label { font-size: 12px; color: rgba(0,0,0,.65); display:block; margin: 0 0 6px; }
+  select, input[type="text"] {
+    width: 100%;
+    padding: 10px 12px;
+    border-radius: 14px;
+    border: 1px solid rgba(0,0,0,.15);
+    background: white;
+    outline: none;
+  }
+
+  .actions { display:flex; flex-wrap:wrap; gap:10px; margin: 10px 0 6px; }
+  .btn {
+    padding: 10px 12px;
+    border-radius: 14px;
+    border: 1px solid rgba(0,0,0,.15);
+    background: white;
+    cursor: pointer;
+    min-height: 40px;
+    font-size: 14px;
+  }
+  .btn:hover { background: rgba(0,0,0,.03); }
+  .status { font-size: 12px; color: rgba(0,0,0,.60); }
+
+  .term {
+    border-radius: 16px;
+    border: 1px solid rgba(0,0,0,.10);
+    overflow: hidden;
+    background: #061a10;
+  }
+  .termbar {
+    display:flex; align-items:center; justify-content:space-between;
+    padding: 10px 12px;
+    background: rgba(0,0,0,.35);
+    border-bottom: 1px solid rgba(255,255,255,.07);
+    color: rgba(200,255,210,.9);
+    font-size: 12px;
+  }
+  .termbar .dots { display:flex; gap:6px; }
+  .dot { width:10px; height:10px; border-radius:999px; background: rgba(160,255,180,.25); }
+  .termbar .title { font-weight: 600; letter-spacing:.2px; }
+
+  pre.ascii {
+    margin: 0;
+    padding: 14px 14px 16px;
+    color: #9cffb0;
+    font-size: 13px;
+    line-height: 1.25;
+    white-space: pre;
+    overflow-x: auto;
+  }
+  .note { font-size: 13px; color: rgba(0,0,0,.66); line-height: 1.45; }
+  .hl { background: rgba(156,255,176,.18); padding: 2px 6px; border-radius: 8px; border: 1px solid rgba(156,255,176,.25); }
+
+  .section h2 { margin-top: 6px; }
+  .section h3 { margin-top: 10px; }
+
+  table { width: 100%; border-collapse: collapse; }
+  th, td { padding: 10px; border-bottom: 1px solid rgba(0,0,0,.10); vertical-align: top; }
+  th { text-align:left; font-size: 13px; color: rgba(0,0,0,.7); }
+
+  /* Modal */
+  .modalBackdrop {
+    position: fixed; inset: 0;
+    background: rgba(0,0,0,.45);
+    display:none;
+    align-items:center;
+    justify-content:center;
+    padding: 16px;
+    z-index: 9999;
+  }
+  .modal {
+    width: min(1100px, 100%);
+    max-height: 86vh;
+    overflow: auto;
+    background: white;
+    border-radius: 18px;
+    border: 1px solid rgba(0,0,0,.12);
+    box-shadow: 0 10px 30px rgba(0,0,0,.25);
+  }
+  .modalHeader {
+    display:flex; align-items:center; justify-content:space-between;
+    padding: 12px 14px;
+    border-bottom: 1px solid rgba(0,0,0,.10);
+    position: sticky; top: 0; background: white;
+    z-index: 1;
+  }
+  .modalHeader strong { font-size: 14px; }
+  .x { border: 1px solid rgba(0,0,0,.18); background: white; border-radius: 12px; padding: 8px 10px; cursor:pointer; }
+  .modalBody { padding: 14px; }
+
+  .tabs { display:flex; flex-wrap:wrap; gap:8px; margin: 8px 0 12px; }
+  .tab {
+    padding: 8px 10px; border-radius: 999px;
+    border: 1px solid rgba(0,0,0,.14);
+    background: white; cursor:pointer; font-size: 13px;
+  }
+  .tab.active { background: rgba(0,0,0,.04); }
+
+  .termModal {
+    border-radius: 16px;
+    overflow:hidden;
+    border: 1px solid rgba(0,0,0,.12);
+    background:#04140c;
+  }
+  .termModal pre {
+    margin:0;
+    padding: 14px;
+    color:#88ffab;
+    font-size: 13px;
+    line-height: 1.3;
+    white-space: pre;
+    overflow-x:auto;
+  }
+  .toolbar {
+    display:flex; flex-wrap:wrap; gap:10px; align-items:center;
+    margin: 8px 0 0;
+  }
+  .tiny { font-size: 12px; color: rgba(0,0,0,.6); }
+
+  /* Fun intro modal */
+  .heroModalBox {
+    border-radius: 18px;
+    overflow:hidden;
+    border: 1px solid rgba(0,0,0,.12);
+  }
+  .heroTop {
+    background:#061a10;
+    color:#9cffb0;
+    padding: 14px;
+    font-family: ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas, "Liberation Mono", "Courier New", monospace;
+    font-size: 13px;
+    line-height: 1.35;
+  }
+
+  /* FIX: prevent right column (Definitions) from stretching the grid row */
+  .defsCard{
+    max-height: 520px;
+    overflow: auto;
+    align-self: start;
+    position: sticky;
+    top: 14px;
+    scrollbar-gutter: stable;
+    overscroll-behavior: contain;
+  }
+  @media (max-width: 980px){
+    .defsCard{
+      position: static;
+      max-height: none;
+      overflow: visible;
+    }
+  }
+</style>
+
+<div class="wrap">
+
+  <div class="chips">
+    <span class="chip">Beowulf-style</span>
+    <span class="chip">HPC fundamentals</span>
+    <span class="chip">Real + VM + Hybrid</span>
+    <span class="chip">Public-safe</span>
+    <span class="chip">Green-on-black terminals</span>
+  </div>
+
+  <div class="grid">
+    <div class="card">
+      <h2>ASCII Cluster Diagram (animated)</h2>
+
+      <div class="term" aria-label="ASCII cluster diagram">
+        <div class="termbar">
+          <div class="dots"><span class="dot"></span><span class="dot"></span><span class="dot"></span></div>
+          <div class="title">WOLFOS / Beowulf Revival — ASCII Cluster View</div>
+          <div class="k" id="asciiHint">Node Count changes the diagram</div>
+        </div>
+        <pre class="ascii k" id="ascii"></pre>
+      </div>
+
+      <p class="note" style="margin-top:10px;">
+        This diagram updates live based on <strong>Node Count</strong>. It’s a “Beowulf vibe” without running anything server-side.
+      </p>
+
+      <div class="controls">
+        <div>
+          <label for="nodeCount">Node Count (workers)</label>
+          <select id="nodeCount">
+            <option value="2">2 workers (wolf01..wolf02)</option>
+            <option value="3">3 workers (wolf01..wolf03)</option>
+            <option value="4">4 workers (wolf01..wolf04)</option>
+            <option value="6" selected>6 workers (wolf01..wolf06)</option>
+            <option value="8">8 workers (wolf01..wolf08)</option>
+          </select>
+        </div>
+        <div>
+          <label for="distro">Distro</label>
+          <select id="distro">
+            <option value="debian">Debian/Ubuntu (apt)</option>
+            <option value="rhel">RHEL/Fedora/Rocky/Alma (dnf)</option>
+          </select>
+        </div>
+        <div>
+          <label for="mode">Setup Type</label>
+          <select id="mode">
+            <option value="real" selected>Real hardware</option>
+            <option value="vm">VM-only (VirtualBox/UTM/VMware)</option>
+            <option value="hybrid">Hybrid (real head + VM workers or mixed)</option>
+          </select>
+        </div>
+        <div>
+          <label for="subnet">Cluster Subnet</label>
+          <input id="subnet" type="text" value="192.168.0.0/24" />
+        </div>
+      </div>
+
+      <div class="actions">
+        <button class="btn" id="btnTerminal">Open Terminal (commands)</button>
+        <button class="btn" id="btnTrouble">Troubleshooting (Top 10)</button>
+        <button class="btn" id="btnExport">Export Commands JSON</button>
+        <span class="status" id="status">Ready.</span>
+      </div>
+
+      <p class="muted">
+        Quick model: <span class="hl k">wolf00</span> is the head node (login + scheduler-ish + shared services), and
+        <span class="hl k">wolf01..N</span> are workers. All nodes sit on a private LAN.
+      </p>
+    </div>
+
+    <div class="card section defsCard">
+      <h2>Definitions (so the post stands alone)</h2>
+
+      <p class="muted">
+        The old “Beowulf HOWTO” era popularized a simple, practical idea: build an HPC cluster from commodity machines
+        and a fast-enough LAN. Today the spirit is the same — but the tooling and security expectations are modern.
+      </p>
+
+      <table>
+        <thead>
+          <tr><th style="width: 180px;">Term</th><th>Definition (plain language)</th></tr>
+        </thead>
+        <tbody>
+          <tr>
+            <td class="k"><strong>Beowulf cluster</strong></td>
+            <td>
+              A multi-computer setup used for parallel computations: one <strong>head</strong> node + one or more <strong>worker</strong> nodes,
+              connected via Ethernet (or faster). Jobs run across nodes using a parallel programming model (commonly MPI).
+            </td>
+          </tr>
+          <tr>
+            <td class="k"><strong>Head node</strong> (wolf00)</td>
+            <td>
+              The “front door”: you log in here, compile code here, dispatch runs from here, and often host shared services (SSH, NFS, etc.).
+              It can also be your “dev box.”
+            </td>
+          </tr>
+          <tr>
+            <td class="k"><strong>Worker node</strong> (wolf01..N)</td>
+            <td>
+              The “muscle”: executes computation. Typically minimal software: SSH + MPI runtime + your app dependencies.
+            </td>
+          </tr>
+          <tr>
+            <td class="k"><strong>Private LAN</strong></td>
+            <td>
+              A network segment not exposed publicly (e.g., <span class="k">192.168.x.x</span>). This is key for a public-safe guide:
+              keep cluster services bound to the cluster subnet.
+            </td>
+          </tr>
+          <tr>
+            <td class="k"><strong>MPI</strong></td>
+            <td>
+              Message Passing Interface: the standard way to coordinate work across nodes. Your program runs as multiple processes
+              (ranks) across nodes and exchanges messages. We use <strong>OpenMPI</strong> in this guide.
+            </td>
+          </tr>
+          <tr>
+            <td class="k"><strong>COW</strong> (Cluster of Workstations)</td>
+            <td>
+              A “soft” cluster made from machines you don’t fully own/admin. You can still do MPI jobs if you have SSH access and consistent environments,
+              but you may not be able to wipe/reinstall or run shared services like NFS.
+            </td>
+          </tr>
+          <tr>
+            <td class="k"><strong>Real / VM / Hybrid</strong></td>
+            <td>
+              <strong>Real:</strong> physical boxes. <strong>VM:</strong> everything virtual on one or more hosts. <strong>Hybrid:</strong> mix of both.
+              Hybrid is great for learning: real head node + VM workers is very effective.
+            </td>
+          </tr>
+        </tbody>
+      </table>
+    </div>
+  </div>
+
+  <div class="card section" style="margin-top:18px;">
+    <h2>Architecture (recommended baseline)</h2>
+    <p class="muted">
+      This post uses a simple naming + IP convention that scales cleanly from 2 to 8 workers:
+      <span class="k">wolf00 = 192.168.0.100</span>, and workers are <span class="k">wolf01..N = 192.168.0.101..</span>.
+      You can change the subnet/IP policy, but keep it consistent.
+    </p>
+
+    <ul class="muted">
+      <li><strong>Head node (wolf00)</strong>: SSH server, build tools, MPI, optional NFS export.</li>
+      <li><strong>Workers (wolf01..N)</strong>: SSH server, MPI runtime, optional NFS mount.</li>
+      <li><strong>Shared user</strong>: a non-root account (e.g., <span class="k">wolf</span>) present on all nodes.</li>
+      <li><strong>Security posture</strong>: no public exposure; allow only cluster-subnet traffic to required services (SSH/NFS where used).</li>
+    </ul>
+
+    <p class="note">
+      The classic HOWTOs often suggest “turn off the firewall for MPI.” Modern approach: keep firewall on, allow SSH (and NFS if used) from the cluster subnet.
+      OpenMPI usually launches via SSH and does not require you to globally disable firewalls if you keep traffic inside the private LAN.
+    </p>
+  </div>
+
+  <div class="card section" style="margin-top:18px;">
+    <h2>Step-by-step build plan (what the generated terminal commands will do)</h2>
+
+    <h3>Head node (wolf00)</h3>
+    <ol class="muted">
+      <li>Set hostname and static IP (or DHCP reservation) for wolf00.</li>
+      <li>Create a shared non-root user (e.g., <span class="k">wolf</span>) consistently across all nodes.</li>
+      <li>Install packages: SSH, OpenMPI, build tools; optionally NFS server.</li>
+      <li>Set <span class="k">/etc/hosts</span> mapping for wolf00 + workers (convenience and stability).</li>
+      <li>Generate SSH keys for passwordless head → workers (for MPI launch).</li>
+      <li>(Optional) Export a shared directory via NFS (good for early learning; later you may outgrow it).</li>
+    </ol>
+
+    <h3>Worker nodes (wolf01..N)</h3>
+    <ol class="muted">
+      <li>Set hostname + IP for each worker.</li>
+      <li>Create the same user + SSH setup.</li>
+      <li>Install packages: SSH + OpenMPI; optionally NFS client and mount.</li>
+      <li>Copy head’s <span class="k">authorized_keys</span> to each worker (so head can SSH without prompts).</li>
+    </ol>
+
+    <h3>Verification</h3>
+    <ol class="muted">
+      <li>Ping name/IP, SSH from head to each worker.</li>
+      <li>MPI “hello world” across nodes.</li>
+      <li>(Optional) NFS read/write test if enabled.</li>
+    </ol>
+  </div>
+
+  <div class="card section" style="margin-top:18px;">
+    <h2>Modern notes (VM, Hybrid, and realism)</h2>
+    <ul class="muted">
+      <li><strong>VM-only</strong>: easiest learning lab. Use a “Host-only” network so the VMs share a private subnet.</li>
+      <li><strong>Hybrid</strong>: your real machine as wolf00 + a few worker VMs. This feels like a “real” cluster but stays manageable.</li>
+      <li><strong>Real hardware</strong>: switch + cables; static/DHCP reservations; consistent BIOS settings; avoid power-management surprises while learning.</li>
+    </ul>
+
+    <p class="note">
+      This post is meant to be published publicly. So it avoids steps that would encourage unsafe internet exposure.
+      Keep your cluster on a private LAN.
+    </p>
+  </div>
+
+</div>
+
+<div class="modalBackdrop" id="modalBackdrop">
+  <div class="modal" role="dialog" aria-modal="true" aria-label="Terminal modal">
+    <div class="modalHeader">
+      <strong id="modalTitle">Terminal</strong>
+      <button class="x" id="modalClose">Close</button>
+    </div>
+    <div class="modalBody" id="modalBody"></div>
+  </div>
+</div>
+
+<script>
+  const $ = (s) => document.querySelector(s);
+
+  const nodeCountEl = $("#nodeCount");
+  const distroEl = $("#distro");
+  const modeEl = $("#mode");
+  const subnetEl = $("#subnet");
+  const asciiEl = $("#ascii");
+  const statusEl = $("#status");
+
+  const modalBackdrop = $("#modalBackdrop");
+  const modalTitle = $("#modalTitle");
+  const modalBody = $("#modalBody");
+  const modalClose = $("#modalClose");
+
+  function clamp(n, a, b){ return Math.max(a, Math.min(b, n)); }
+
+  function parseSubnetCIDR(cidr) {
+    // Very lightweight: expects x.x.x.x/24 style
+    // We mainly use it for display and "allow from subnet" strings.
+    return (cidr || "192.168.0.0/24").trim();
+  }
+
+  function pad2(n){ return String(n).padStart(2, "0"); }
+
+  function workers(n) {
+    const out = [];
+    for (let i=1; i<=n; i++) out.push("wolf" + pad2(i));
+    return out;
+  }
+
+  function ipFor(i) {
+    // wolf00 = .100, wolf01 = .101 ...
+    return "192.168.0." + (100 + i);
+  }
+
+  function hostsBlock(n) {
+    const lines = [];
+    lines.push(`${ipFor(0)} wolf00`);
+    for (let i=1;i<=n;i++) lines.push(`${ipFor(i)} wolf${pad2(i)}`);
+    return lines.join("\n");
+  }
+
+  function asciiDiagram(n, frame) {
+    const w = workers(n);
+    const blink = (frame % 2 === 0) ? "█" : " ";
+    const head = `[wolf00] head (${ipFor(0)})`;
+    const left = `Internet (optional)`;
+    const lan = `(home LAN)`;
+    const sw = `[Switch]`;
+    const rows = [];
+
+    rows.push(`WOLFOS / Beowulf Revival — ASCII Cluster View  ${blink}`);
+    rows.push("");
+    rows.push(`${left}`);
+    rows.push(`   |`);
+    rows.push(`   |        ${lan}`);
+    rows.push(`   +--------------------------+`);
+    rows.push(`                              |`);
+    rows.push(`                         ${sw}=====${head}`);
+    rows.push(`                              |`);
+    rows.push(`                              +---- ${w.slice(0, Math.min(4, w.length)).map((hn, idx)=>`[${hn}] worker (${ipFor(idx+1)})`).join("  |  ")}`);
+    if (w.length > 4) {
+      rows.push(`                              |`);
+      rows.push(`                              +---- ${w.slice(4).map((hn, idx)=>`[${hn}] worker (${ipFor(idx+5)})`).join("  |  ")}`);
+    }
+    rows.push("");
+    rows.push(`Naming: wolf00=head, wolf01..wolf${pad2(n)}=workers`);
+    rows.push(`Subnet: ${parseSubnetCIDR(subnetEl.value)}`);
+    rows.push(`Tip: keep services on private LAN (public-safe).`);
+    return rows.join("\n");
+  }
+
+  let frame = 0;
+  function tickASCII(){
+    const n = Number(nodeCountEl.value || 6);
+    asciiEl.textContent = asciiDiagram(n, frame++);
+  }
+
+  function openModal(title, innerHTML) {
+    modalTitle.textContent = title;
+    modalBody.innerHTML = innerHTML;
+    modalBackdrop.style.display = "flex";
+  }
+  function closeModal(){
+    modalBackdrop.style.display = "none";
+    modalBody.innerHTML = "";
+  }
+  modalClose.addEventListener("click", closeModal);
+  modalBackdrop.addEventListener("click", (e)=>{ if (e.target === modalBackdrop) closeModal(); });
+
+  function copyText(t) {
+    navigator.clipboard.writeText(t).then(()=>{
+      statusEl.textContent = "Copied to clipboard.";
+      setTimeout(()=> statusEl.textContent = "Ready.", 900);
+    }).catch(()=>{
+      statusEl.textContent = "Copy failed (clipboard permissions).";
+    });
+  }
+
+  function pkgCommands(distro) {
+    if (distro === "rhel") {
+      return {
+        head: [
+          "sudo dnf -y update",
+          "sudo dnf -y install gcc gcc-c++ make git",
+          "sudo dnf -y install openssh-server openssh-clients",
+          "sudo systemctl enable --now sshd",
+          "sudo dnf -y install nfs-utils",
+          "sudo dnf -y install openmpi openmpi-devel"
+        ],
+        worker: [
+          "sudo dnf -y update",
+          "sudo dnf -y install gcc gcc-c++ make",
+          "sudo dnf -y install openssh-server openssh-clients",
+          "sudo systemctl enable --now sshd",
+          "sudo dnf -y install nfs-utils",
+          "sudo dnf -y install openmpi"
+        ],
+        notes: [
+          "On some distros, OpenMPI may be in a module path. If mpirun isn't found, try:",
+          "  which mpirun || ls /usr/lib64/openmpi/bin || ls /usr/lib/openmpi/bin",
+          "  export PATH=/usr/lib64/openmpi/bin:$PATH (adjust if needed)"
+        ]
+      };
+    }
+    // Debian/Ubuntu
+    return {
+      head: [
+        "sudo apt update",
+        "sudo apt -y install build-essential git",
+        "sudo apt -y install openssh-server",
+        "sudo systemctl enable --now ssh",
+        "sudo apt -y install nfs-kernel-server nfs-common",
+        "sudo apt -y install openmpi-bin libopenmpi-dev"
+      ],
+      worker: [
+        "sudo apt update",
+        "sudo apt -y install build-essential",
+        "sudo apt -y install openssh-server",
+        "sudo systemctl enable --now ssh",
+        "sudo apt -y install nfs-common",
+        "sudo apt -y install openmpi-bin"
+      ],
+      notes: [
+        "Ubuntu/Debian typically expose mpirun/mpicc in PATH by default.",
+        "If not: try `which mpirun` and ensure openmpi-bin is installed."
+      ]
+    };
+  }
+
+  function firewallGuidance(distro, subnet) {
+    // Public-safe: allow only cluster subnet.
+    if (distro === "rhel") {
+      return [
+        `sudo firewall-cmd --permanent --add-service=ssh --zone=trusted`,
+        `sudo firewall-cmd --permanent --zone=trusted --add-source=${subnet}`,
+        `# If using NFS (optional):`,
+        `sudo firewall-cmd --permanent --add-service=nfs --zone=trusted`,
+        `sudo firewall-cmd --permanent --add-service=mountd --zone=trusted`,
+        `sudo firewall-cmd --permanent --add-service=rpc-bind --zone=trusted`,
+        `sudo firewall-cmd --reload`
+      ].join("\\n").replaceAll("\\n","\n");
+    }
+    // Debian/Ubuntu with UFW (optional)
+    return [
+      `# If UFW is enabled, allow only from the cluster subnet:`,
+      `sudo ufw allow from ${subnet} to any port 22 proto tcp`,
+      `# If using NFS (optional), keep it subnet-restricted too:`,
+      `sudo ufw allow from ${subnet} to any port 2049 proto tcp`,
+      `sudo ufw allow from ${subnet} to any port 2049 proto udp`,
+      `sudo ufw status`
+    ].join("\\n").replaceAll("\\n","\n");
+  }
+
+  function buildCommands(n, distro, mode, subnet) {
+    const pkgs = pkgCommands(distro);
+
+    const users = [
+      "# Create the same non-root user on ALL nodes (same username + same UID if possible)",
+      "sudo useradd -m -s /bin/bash wolf || true",
+      "sudo passwd wolf",
+      "# Optional: shared group for collaborative files",
+      "sudo groupadd -f beowulf",
+      "sudo usermod -aG beowulf wolf",
+      "# Optional: make group-friendly file perms by default for wolf",
+      "echo 'umask 007' | sudo tee -a /home/wolf/.bashrc >/dev/null",
+      "sudo chown -R wolf:beowulf /home/wolf"
+    ];
+
+    const hosts = [
+      "# /etc/hosts convenience mapping (useful even if DNS exists)",
+      "sudo cp /etc/hosts /etc/hosts.bak.$(date +%F_%H%M%S)",
+      "sudo bash -c 'cat >> /etc/hosts <<\"EOF\"'",
+      hostsBlock(n),
+      "EOF'"
+    ];
+
+    const sshKeys = [
+      "# Head node: generate a keypair for wolf user (no passphrase for automation; you can use passphrase if you manage ssh-agent)",
+      "sudo -iu wolf bash -lc 'mkdir -p ~/.ssh && chmod 700 ~/.ssh'",
+      "sudo -iu wolf bash -lc 'ssh-keygen -t ed25519 -f ~/.ssh/id_ed25519 -N \"\"'",
+      "# Copy wolf00 public key to each worker's authorized_keys (head -> workers)",
+      "# You can use ssh-copy-id if available; otherwise append manually."
+    ];
+
+    const sshCopy = [];
+    for (let i=1;i<=n;i++){
+      const hn = "wolf" + pad2(i);
+      sshCopy.push(`sudo -iu wolf bash -lc 'ssh-copy-id -o StrictHostKeyChecking=accept-new ${hn}' || true`);
+    }
+    sshCopy.push("# If ssh-copy-id isn't installed, do it the manual way (example):");
+    sshCopy.push("#  cat ~/.ssh/id_ed25519.pub | ssh wolf01 \"mkdir -p ~/.ssh && chmod 700 ~/.ssh && cat >> ~/.ssh/authorized_keys && chmod 600 ~/.ssh/authorized_keys\"");
+
+    const nfsHead = [
+      "# Optional (learning-friendly): NFS share from head node",
+      "sudo mkdir -p /mnt/wolf",
+      "sudo chown wolf:beowulf /mnt/wolf",
+      "sudo chmod 0770 /mnt/wolf",
+      "sudo bash -c 'cat >> /etc/exports <<\"EOF\"'",
+      `/mnt/wolf ${subnet}(rw,sync,no_subtree_check)`,
+      "EOF'",
+      "sudo exportfs -ra",
+      "sudo systemctl enable --now nfs-server || sudo systemctl enable --now nfs-kernel-server"
+    ];
+
+    const nfsWorker = [
+      "# Optional: mount NFS share on workers",
+      "sudo mkdir -p /mnt/wolf",
+      "sudo chown wolf:beowulf /mnt/wolf",
+      "sudo chmod 0770 /mnt/wolf",
+      "echo 'wolf00:/mnt/wolf /mnt/wolf nfs defaults,_netdev 0 0' | sudo tee -a /etc/fstab >/dev/null",
+      "sudo mount -a || true",
+      "mount | grep /mnt/wolf || true"
+    ];
+
+    const verify = [
+      "# Verify connectivity from head node as wolf",
+      "sudo -iu wolf bash -lc 'for h in wolf00 " + workers(n).join(" ") + "; do echo \"== $h ==\"; ping -c 1 $h >/dev/null && echo ok || echo fail; done'",
+      "sudo -iu wolf bash -lc 'for h in " + workers(n).join(" ") + "; do echo \"== ssh $h ==\"; ssh -o BatchMode=yes -o ConnectTimeout=5 $h \"hostname; whoami\" || echo \"ssh failed\"; done'"
+    ];
+
+    const mpiHello = [
+      "# Minimal MPI hello-world",
+      "cat > /tmp/hello_mpi.c <<'EOF'",
+      "#include <mpi.h>",
+      "#include <stdio.h>",
+      "int main(int argc, char** argv) {",
+      "  MPI_Init(&argc, &argv);",
+      "  int rank, size;",
+      "  MPI_Comm_rank(MPI_COMM_WORLD, &rank);",
+      "  MPI_Comm_size(MPI_COMM_WORLD, &size);",
+      "  printf(\"Hello from rank %d of %d\\n\", rank, size);",
+      "  MPI_Finalize();",
+      "  return 0;",
+      "}",
+      "EOF",
+      "mpicc /tmp/hello_mpi.c -o /tmp/hello_mpi",
+      "# Hostfile (explicit) — lists workers. You can also rely on OpenMPI default ssh launch.",
+      "cat > /tmp/hostfile <<'EOF'",
+      workers(n).map((hn)=>`${hn} slots=1`).join("\n"),
+      "EOF",
+      "# Run across workers (adjust -np). Example: 1 proc per worker",
+      `mpirun --hostfile /tmp/hostfile -np ${n} /tmp/hello_mpi`
+    ];
+
+    // Mode notes
+    const modeNotes = [];
+    if (mode === "vm") {
+      modeNotes.push("VM MODE NOTES:");
+      modeNotes.push("- Put all VMs on the same private network (Host-only or Internal Network).");
+      modeNotes.push("- Ensure each VM has a static IP or a DHCP reservation.");
+      modeNotes.push("- Use the same hostname scheme wolf00..wolfNN.");
+    } else if (mode === "hybrid") {
+      modeNotes.push("HYBRID MODE NOTES:");
+      modeNotes.push("- Ensure your real and VM nodes can route to the same private subnet.");
+      modeNotes.push("- Avoid NAT-only isolation; you want node-to-node LAN connectivity.");
+    } else {
+      modeNotes.push("REAL MODE NOTES:");
+      modeNotes.push("- Prefer a switch (not Wi-Fi) for consistent latency and bandwidth.");
+      modeNotes.push("- Disable aggressive sleep/power saving while learning.");
+    }
+
+    const headAll = [
+      "### HEAD NODE (wolf00) — baseline",
+      ...pkgs.head,
+      "",
+      "### Security-first firewall notes (optional if firewall is enabled)",
+      firewallGuidance(distro, subnet),
+      "",
+      "### User + groups",
+      ...users,
+      "",
+      "### Hosts mapping",
+      ...hosts,
+      "",
+      "### SSH keys (head -> workers)",
+      ...sshKeys,
+      ...sshCopy,
+      "",
+      "### Optional: NFS shared directory",
+      ...nfsHead,
+      "",
+      "### Verification",
+      ...verify,
+      "",
+      "### MPI test",
+      ...mpiHello,
+      "",
+      ...pkgs.notes.map(x=>"# " + x),
+      "",
+      ...modeNotes.map(x=>"# " + x)
+    ].join("\n");
+
+    const workerAll = [
+      "### WORKER NODE (wolf01..wolfNN) — baseline (run on each worker, changing hostname/IP accordingly)",
+      ...pkgs.worker,
+      "",
+      "### Security-first firewall notes (optional if firewall is enabled)",
+      firewallGuidance(distro, subnet),
+      "",
+      "### User + groups",
+      ...users,
+      "",
+      "### Hosts mapping (same block as head)",
+      ...hosts,
+      "",
+      "### Optional: NFS mount (if head exports /mnt/wolf)",
+      ...nfsWorker,
+      "",
+      "# NOTE: You do NOT generate keys on each worker in this simplified model.",
+      "# The head node's public key is authorized on workers so mpirun can ssh-launch."
+    ].join("\n");
+
+    const artifacts = {
+      meta: { generatedAt: new Date().toISOString(), nodeCount: n, distro, mode, subnet },
+      head: headAll,
+      worker: workerAll,
+      hostsBlock: hostsBlock(n),
+      hostfile: workers(n).map((hn)=>`${hn} slots=1`).join("\n")
+    };
+
+    return artifacts;
+  }
+
+  function terminalModalHTML(art) {
+    const tabs = `
+      <div class="tabs">
+        <button class="tab active" data-tab="head">Head node (wolf00)</button>
+        <button class="tab" data-tab="worker">Worker template</button>
+        <button class="tab" data-tab="snips">Snippets</button>
+      </div>
+    `;
+
+    const head = `
+      <div class="termModal">
+        <div class="termbar">
+          <div class="dots"><span class="dot"></span><span class="dot"></span><span class="dot"></span></div>
+          <div class="title">Terminal — Head node (wolf00)</div>
+          <div class="k">green-on-black</div>
+        </div>
+        <pre class="k" id="termText">${escapeHTML(art.head)}</pre>
+      </div>
+      <div class="toolbar">
+        <button class="btn" id="copyBtn">Copy</button>
+        <span class="tiny">Copy the full head-node script to your clipboard.</span>
+      </div>
+    `;
+
+    const worker = `
+      <div class="termModal">
+        <div class="termbar">
+          <div class="dots"><span class="dot"></span><span class="dot"></span><span class="dot"></span></div>
+          <div class="title">Terminal — Worker template</div>
+          <div class="k">green-on-black</div>
+        </div>
+        <pre class="k" id="termTextWorker">${escapeHTML(art.worker)}</pre>
+      </div>
+      <div class="toolbar">
+        <button class="btn" id="copyWorkerBtn">Copy</button>
+        <span class="tiny">Run on each worker after setting hostname/IP.</span>
+      </div>
+    `;
+
+    const snips = `
+      <div class="card">
+        <h3>Snippets (quick copy)</h3>
+        <p class="muted">These are the most frequently edited bits.</p>
+        <table>
+          <tbody>
+            <tr>
+              <th style="width: 160px;">/etc/hosts block</th>
+              <td><pre class="k" id="hostsSnip" style="white-space:pre; overflow:auto; background: rgba(0,0,0,.03); padding:10px; border-radius:12px; border:1px solid rgba(0,0,0,.08); margin:0;">${escapeHTML(art.hostsBlock)}</pre>
+                <div class="toolbar"><button class="btn" id="copyHostsBtn">Copy</button><span class="tiny">Paste into /etc/hosts on all nodes.</span></div>
+              </td>
+            </tr>
+            <tr>
+              <th>Hostfile</th>
+              <td><pre class="k" id="hostfileSnip" style="white-space:pre; overflow:auto; background: rgba(0,0,0,.03); padding:10px; border-radius:12px; border:1px solid rgba(0,0,0,.08); margin:0;">${escapeHTML(art.hostfile)}</pre>
+                <div class="toolbar"><button class="btn" id="copyHostfileBtn">Copy</button><span class="tiny">Used by mpirun --hostfile.</span></div>
+              </td>
+            </tr>
+          </tbody>
+        </table>
+      </div>
+    `;
+
+    return `
+      <div class="muted">
+        Generated for <span class="k">${escapeHTML(art.meta.distro)}</span> /
+        <span class="k">${escapeHTML(art.meta.mode)}</span> /
+        workers: <span class="k">${escapeHTML(art.meta.nodeCount)}</span> /
+        subnet: <span class="k">${escapeHTML(art.meta.subnet)}</span>
+      </div>
+      ${tabs}
+      <div id="tab_head">${head}</div>
+      <div id="tab_worker" style="display:none;">${worker}</div>
+      <div id="tab_snips" style="display:none;">${snips}</div>
+    `;
+  }
+
+  function troubleModalHTML() {
+    const rows = [
+      ["SSH asks for password", "Head key not installed on workers. Re-run ssh-copy-id or append id_ed25519.pub to ~/.ssh/authorized_keys; ensure perms: ~/.ssh 700, authorized_keys 600."],
+      ["SSH first-time prompt blocks automation", "Use StrictHostKeyChecking=accept-new once, or login once manually to accept host key."],
+      ["Hostname resolves but ping fails", "IP conflict or wrong subnet. Verify IPs, netmask, and that all nodes are on same LAN / host-only network."],
+      ["mpirun not found", "OpenMPI not installed or not in PATH. Install packages; on some systems adjust PATH to OpenMPI bin directory."],
+      ["mpirun hangs / stalls", "SSH launch failing on one worker, or firewall blocks intra-LAN traffic. Check ssh to each worker; ensure allowed from cluster subnet."],
+      ["NFS mount fails", "Head export not active or rpc services not running. Verify exportfs -v, systemctl status nfs-server, and subnet permissions."],
+      ["Permission denied on shared dir", "Fix ownership and group: chown wolf:beowulf /mnt/wolf; chmod 0770; ensure user is in beowulf group."],
+      ["Different MPI versions across nodes", "Keep packages consistent. Mixing OpenMPI builds can cause weird behavior. Use same distro version or same container image."],
+      ["VM networking confusion", "Use host-only/internal network for VM cluster LAN. NAT-only prevents node-to-node reachability."],
+      ["Performance is bad", "Wi-Fi instead of wired, power saving throttling, swapping, slow storage. Use switch + cables, disable sleep/throttle for tests."]
+    ];
+
+    const htmlRows = rows.map(([a,b])=>`
+      <tr>
+        <td><strong>${escapeHTML(a)}</strong></td>
+        <td class="muted">${escapeHTML(b)}</td>
+      </tr>
+    `).join("");
+
+    return `
+      <div class="card">
+        <h2>Troubleshooting (Top 10)</h2>
+        <p class="muted">
+          These are the most common issues when reviving a Beowulf-style cluster lab (Real/VM/Hybrid).
+          Keep everything inside the cluster subnet and verify SSH connectivity first.
+        </p>
+        <table>
+          <thead>
+            <tr><th style="width: 260px;">Symptom</th><th>Fix</th></tr>
+          </thead>
+          <tbody>${htmlRows}</tbody>
+        </table>
+      </div>
+    `;
+  }
+
+  function exportJSON(art) {
+    const blob = new Blob([JSON.stringify(art, null, 2)], { type: "application/json" });
+    const url = URL.createObjectURL(blob);
+    const a = document.createElement("a");
+    a.href = url;
+    a.download = "beowulf_commands.json";
+    document.body.appendChild(a);
+    a.click();
+    a.remove();
+    URL.revokeObjectURL(url);
+    statusEl.textContent = "Exported: beowulf_commands.json";
+    setTimeout(()=> statusEl.textContent = "Ready.", 900);
+  }
+
+  function escapeHTML(s){
+    return String(s ?? "").replace(/[&<>"']/g, c => ({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]));
+  }
+
+  function refresh() {
+    const n = clamp(Number(nodeCountEl.value || 6), 2, 8);
+    const distro = distroEl.value || "debian";
+    const mode = modeEl.value || "real";
+    const subnet = parseSubnetCIDR(subnetEl.value);
+    tickASCII();
+    statusEl.textContent = `Ready. Workers=${n}, distro=${distro}, mode=${mode}.`;
+    return buildCommands(n, distro, mode, subnet);
+  }
+
+  // Buttons
+  $("#btnTerminal").addEventListener("click", ()=>{
+    const art = refresh();
+    openModal("Terminal (generated commands)", terminalModalHTML(art));
+
+    // Tab logic
+    const tabs = modalBody.querySelectorAll(".tab");
+    const show = (id) => {
+      modalBody.querySelector("#tab_head").style.display = (id==="head") ? "" : "none";
+      modalBody.querySelector("#tab_worker").style.display = (id==="worker") ? "" : "none";
+      modalBody.querySelector("#tab_snips").style.display = (id==="snips") ? "" : "none";
+      tabs.forEach(t => t.classList.toggle("active", t.dataset.tab === id));
+    };
+    tabs.forEach(t => t.addEventListener("click", ()=> show(t.dataset.tab)));
+    show("head");
+
+    // Copy buttons (exist in different tabs)
+    const copyBtn = modalBody.querySelector("#copyBtn");
+    if (copyBtn) copyBtn.addEventListener("click", ()=> copyText(buildCommands(Number(nodeCountEl.value||6), distroEl.value, modeEl.value, parseSubnetCIDR(subnetEl.value)).head));
+
+    const copyWorkerBtn = modalBody.querySelector("#copyWorkerBtn");
+    if (copyWorkerBtn) copyWorkerBtn.addEventListener("click", ()=> copyText(buildCommands(Number(nodeCountEl.value||6), distroEl.value, modeEl.value, parseSubnetCIDR(subnetEl.value)).worker));
+
+    const copyHostsBtn = modalBody.querySelector("#copyHostsBtn");
+    if (copyHostsBtn) copyHostsBtn.addEventListener("click", ()=> copyText(buildCommands(Number(nodeCountEl.value||6), distroEl.value, modeEl.value, parseSubnetCIDR(subnetEl.value)).hostsBlock));
+
+    const copyHostfileBtn = modalBody.querySelector("#copyHostfileBtn");
+    if (copyHostfileBtn) copyHostfileBtn.addEventListener("click", ()=> copyText(buildCommands(Number(nodeCountEl.value||6), distroEl.value, modeEl.value, parseSubnetCIDR(subnetEl.value)).hostfile));
+  });
+
+  $("#btnTrouble").addEventListener("click", ()=>{
+    openModal("Troubleshooting", troubleModalHTML());
+  });
+
+  $("#btnExport").addEventListener("click", ()=>{
+    const art = refresh();
+    exportJSON(art);
+  });
+
+  // Live updates
+  nodeCountEl.addEventListener("change", refresh);
+  distroEl.addEventListener("change", refresh);
+  modeEl.addEventListener("change", refresh);
+  subnetEl.addEventListener("input", ()=>{ tickASCII(); });
+
+  // ASCII animation
+  setInterval(tickASCII, 520);
+  tickASCII();
+
+  // Fun intro popup (first load only)
+  (function funIntro(){
+    const key = "beowulf_intro_seen_v1";
+    try {
+      if (localStorage.getItem(key)) return;
+      localStorage.setItem(key, "1");
+    } catch { /* ignore */ }
+
+    const box = `
+      <div class="heroModalBox">
+        <div class="heroTop">
+WOLFOS BOOT SEQUENCE…
+----------------------
+[OK] link up: private LAN
+[OK] head node: wolf00
+[OK] workers: wolf01..wolfNN
+[OK] MPI launch: ssh-based
+[OK] mode: Real / VM / Hybrid
+----------------------
+Type: "wolf up" (figuratively) and bring the pack back.
+
+Tip: Use the Terminal button to generate commands for your current node count.
+        </div>
+      </div>
+      <div style="padding:14px;">
+        <p class="muted" style="margin-top:0;">
+          This is a learning-oriented, public-safe Beowulf-style cluster guide. Keep services on the private subnet.
+        </p>
+        <div class="actions">
+          <button class="btn" id="startBtn">Let’s build (close)</button>
+          <button class="btn" id="openTermBtn">Open Terminal now</button>
+        </div>
+      </div>
+    `;
+    openModal("Welcome — Beowulf Revival", box);
+    const s = modalBody.querySelector("#startBtn");
+    if (s) s.addEventListener("click", closeModal);
+    const t = modalBody.querySelector("#openTermBtn");
+    if (t) t.addEventListener("click", ()=>{
+      closeModal();
+      $("#btnTerminal").click();
+    });
+  })();
+</script>
+
+<hr>
+
+<h2>What you get (and why this is “public-safe”)</h2>
+<ul>
+  <li><strong>Everything on a private network</strong> (LAN / host-only VM network).</li>
+  <li><strong>SSH-based MPI launch</strong> (OpenMPI) — simple, standard, reproducible.</li>
+  <li><strong>Optional NFS</strong> for early-stage convenience (shared working directory).</li>
+  <li><strong>No “turn off firewall globally” advice</strong>: we restrict to the cluster subnet instead.</li>
+</ul>
+
+<h2>Next upgrades (if you want to go beyond the classic HOWTO)</h2>
+<ul>
+  <li><strong>Provisioning</strong>: automate node installs (PXE, cloud-init, Ansible).</li>
+  <li><strong>Scheduler</strong>: Slurm for real multi-user job control.</li>
+  <li><strong>Performance</strong>: better interconnect, CPU pinning, NUMA awareness, storage strategy.</li>
+  <li><strong>Containers</strong>: Apptainer/Singularity for reproducible MPI environments.</li>
+</ul>

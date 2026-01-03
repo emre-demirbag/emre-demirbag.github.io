@@ -103,6 +103,24 @@ We use the classic π-by-integration example because it’s the smallest program
   }
   .cap { font-size: 12px; color: rgba(0,0,0,.62); margin-top: 8px; }
   code.inline { background: rgba(0,0,0,.05); padding: 2px 6px; border-radius: 8px; }
+
+  /* --- FORCE terminal blocks to stay truly dark (theme overrides pre/code) --- */
+  .term pre.termtext{
+    background: #040a06 !important;
+    color: #9cffb0 !important;
+  }
+  .term pre.termtext code{
+    background: transparent !important;
+    color: inherit !important;
+  }
+  .term pre,
+  .term code{
+    background: transparent !important;
+  }
+  .term pre.termtext{
+    border: 0 !important;
+    box-shadow: none !important;
+  }
 </style>
 
 <div class="wrap">
@@ -240,7 +258,7 @@ Rank 0 computes:
       <div class="k">pi_mpi.c</div>
       <div class="k">copy-friendly</div>
     </div>
-    <pre class="termtext k" id="code_pi"><code>#include &lt;mpi.h&gt;
+    <pre class="termtext k" id="code_pi">#include &lt;mpi.h&gt;
 #include &lt;math.h&gt;
 #include &lt;stdio.h&gt;
 #include &lt;stdlib.h&gt;
@@ -286,7 +304,7 @@ int main(int argc, char **argv) {
   MPI_Finalize();
   return 0;
 }
-</code></pre>
+</pre>
     <div class="copyrow">
       <button class="btn" data-copy="#code_pi">Copy</button>
       <span class="status" id="status_pi">Ready.</span>

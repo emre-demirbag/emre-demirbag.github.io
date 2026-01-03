@@ -24,7 +24,7 @@ title: Emre Demirbag
 # description: >- # this means to ignore newlines until "baseurl:"
  
 # baseurl: "" # the subpath of your site, e.g. /blog
-url: "https://emre-demirbag.github.io/" # the base hostname & protocol for your site, e.g. http://example.com
+url: "https://emre-demirbag.github.io" # the base hostname & protocol for your site, e.g. http://example.com
 twitter_username: emredemirbag
 github_username:  emre-demirbag
 
@@ -32,6 +32,12 @@ github_username:  emre-demirbag
 theme: minima
 plugins:
   - jekyll-feed
+
+# --- RSS: keep feed clean (avoid embedding scripts/styles from posts) ---
+feed:
+  excerpt_only: true
+
+excerpt_separator: "<!--more-->"
 
 # Exclude from processing.
 # The following items will not be processed, by default.

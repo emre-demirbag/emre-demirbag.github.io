@@ -66,6 +66,10 @@ categories: jekyll
     overflow-x: auto;
   }
 
+  /* FIX: theme overrides <pre> background; force true terminal black */
+  .term pre.termtext { background: #040a06 !important; }
+  .term pre.termtext code { background: transparent !important; color: inherit; }
+
   .copyrow{
     display:flex; gap:10px; flex-wrap:wrap;
     align-items:center; justify-content:flex-start;

@@ -1,7 +1,7 @@
 ---
 layout: post
 title: "A First MPI Program "
-date:   2025-12-30 15:25:15 +0300
+date:   2025-01-03 14:09:15 +0300
 categories: jekyll
 ---
 

@@ -3,23 +3,468 @@ permalink: /404.html
 layout: default
 ---
 
-<style type="text/css" media="screen">
-  .container {
-    margin: 10px auto;
-    max-width: 600px;
-    text-align: center;
+<style>
+  :root { color-scheme: light; }
+
+  .wrap404{ max-width: 980px; margin: 0 auto; padding: 28px 16px 44px; }
+  .k { font-family: ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas, "Liberation Mono","Courier New", monospace; }
+
+  /* FORCE true-black terminal (minima/theme can grayify pre/code) */
+  .term,
+  .term pre, .term code, .term pre code{
+    background:#040a06 !important;
   }
-  h1 {
-    margin: 30px 0;
-    font-size: 4em;
-    line-height: 1;
-    letter-spacing: -1px;
+  .term pre code{ background: transparent !important; }
+
+  .term{
+    border-radius: 18px;
+    overflow: hidden;
+    border: 1px solid rgba(0,0,0,.18);
+    box-shadow: 0 10px 26px rgba(0,0,0,.12);
+    margin: 0;
+  }
+
+  .termbar{
+    display:flex; align-items:center; justify-content:space-between;
+    gap:12px;
+    padding: 12px 14px;
+    background: rgba(255,255,255,.04);
+    border-bottom: 1px solid rgba(255,255,255,.08);
+    color: rgba(190,255,205,.92);
+    font-size: 12px;
+  }
+  .leftbar{ display:flex; align-items:center; gap:10px; min-width:0; }
+  .dots{ display:flex; gap:6px; align-items:center; }
+  .dot{ width:10px; height:10px; border-radius:999px; background: rgba(160,255,180,.25); }
+  .barTitle{ font-weight:650; letter-spacing:.2px; white-space:nowrap; overflow:hidden; text-overflow:ellipsis; }
+  .rightbar{ display:flex; gap:10px; align-items:center; white-space:nowrap; opacity:.95; }
+  .rightbar .hint{ opacity:.85; }
+
+  .termBody{
+    padding: 12px 12px 10px;
+    color:#9cffb0;
+    font-size: 13px;
+    line-height: 1.35;
+  }
+
+  .screen{
+    white-space: pre-wrap;       /* important: real newlines */
+    overflow-wrap: anywhere;
+    max-height: 420px;
+    overflow: auto;
+    padding-bottom: 8px;
+    scrollbar-gutter: stable;
+  }
+
+  .promptRow{
+    display:flex;
+    gap: 8px;
+    align-items: baseline;
+    border-top: 1px solid rgba(255,255,255,.08);
+    padding-top: 10px;
+    margin-top: 10px;
+  }
+  .prompt{
+    color: rgba(190,255,205,.92);
+    flex: 0 0 auto;
+    white-space:nowrap;
+  }
+  .cmd{
+    flex: 1 1 auto;
+    min-width: 0;
+    background: transparent;
+    border: none;
+    outline: none;
+    color: #9cffb0;
+    font: inherit;
+    padding: 0;
+  }
+
+  .hintRow{
+    margin-top: 8px;
+    font-size: 12px;
+    color: rgba(190,255,205,.75);
+  }
+  .hintRow a{ color: inherit; }
+
+  .copyrow{
+    display:flex; gap:10px; flex-wrap:wrap;
+    align-items:center; justify-content:flex-start;
+    padding: 10px 12px;
+    background: rgba(255,255,255,.03);
+    border-top: 1px solid rgba(255,255,255,.08);
+  }
+  .btn{
+    appearance:none;
+    border: 1px solid rgba(255,255,255,.18);
+    background: rgba(255,255,255,.06);
+    color: rgba(220,255,230,.95);
+    border-radius: 12px;
+    padding: 8px 10px;
+    cursor:pointer;
+    font-size: 13px;
+  }
+  .btn:hover{ background: rgba(255,255,255,.10); }
+  .status{ font-size: 12px; color: rgba(190,255,205,.8); }
+
+  .quick{
+    margin-top: 14px;
+    color: rgba(0,0,0,.70);
+    font-size: 13px;
+    line-height: 1.55;
+  }
+  .pill{
+    display:inline-block;
+    padding: 2px 8px;
+    border-radius: 999px;
+    border: 1px solid rgba(0,0,0,.10);
+    background: rgba(0,0,0,.03);
+    font-size: 12px;
+    margin-right: 8px;
+  }
+
+  @media (max-width: 520px){
+    .rightbar{ display:none; }
+    .screen{ max-height: 320px; }
   }
 </style>
 
-<div class="container">
-  <h1>404</h1>
+<div class="wrap404">
+  <div class="term k" id="mini_term" role="application" aria-label="404 terminal">
+    <div class="termbar">
+      <div class="leftbar">
+        <div class="dots"><span class="dot"></span><span class="dot"></span><span class="dot"></span></div>
+        <div class="barTitle">404 • emre@lab:~ • mini shell</div>
+      </div>
+      <div class="rightbar">
+        <span id="mini_term_clock">--:--:--</span>
+        <span class="hint">type <span class="k">help</span></span>
+      </div>
+    </div>
 
-  <p><strong>Page not found :(</strong></p>
-  <p>The requested page could not be found.</p>
+    <div class="termBody">
+      <div class="screen" id="mini_term_screen" aria-live="polite"></div>
+
+      <div class="promptRow">
+        <div class="prompt" id="mini_term_prompt">emre@lab:~$</div>
+        <input class="cmd" id="mini_term_input" type="text" spellcheck="false" autocomplete="off" />
+      </div>
+
+      <div class="hintRow">
+        Commands: <span class="k">help</span>, <span class="k">ls</span>, <span class="k">pwd</span>, <span class="k">cd</span>, <span class="k">cat</span>, <span class="k">echo</span>, <span class="k">uname</span>, <span class="k">date</span>, <span class="k">clear</span>, <span class="k">open</span>
+        <span style="opacity:.7;">(↑/↓ history)</span>
+      </div>
+    </div>
+
+    <div class="copyrow">
+      <button class="btn" id="mini_term_copy">Copy session</button>
+      <span class="status" id="mini_term_status">Ready.</span>
+    </div>
+  </div>
+
+  <div class="quick">
+    <span class="pill">Quick</span>
+    <a href="https://emre-demirbag.github.io/">Home</a> ·
+    <a href="https://emre-demirbag.github.io/feed.xml">RSS</a> ·
+    <a href="https://emre-demirbag.github.io/about/">About</a>
+  </div>
 </div>
+
+<script>
+(function(){
+  const $ = (id) => document.getElementById(id);
+
+  const screen = $("mini_term_screen");
+  const input = $("mini_term_input");
+  const promptEl = $("mini_term_prompt");
+  const clockEl = $("mini_term_clock");
+  const statusEl = $("mini_term_status");
+  const copyBtn = $("mini_term_copy");
+
+  // Base URL (works both on GitHub Pages and if you open the file locally)
+  const SITE_FALLBACK = "https://emre-demirbag.github.io";
+  const ORIGIN = (window.location.origin && window.location.origin !== "null") ? window.location.origin : SITE_FALLBACK;
+
+  const links = {
+    home: ORIGIN + "/",
+    rss:  ORIGIN + "/feed.xml",
+    about: ORIGIN + "/about/",
+    // You don't currently have /categories/hpc/ on the site, so point hpc to home for now.
+    hpc:  ORIGIN + "/"
+  };
+
+  // “fake FS”
+  const fs = {
+    "/": {
+      "home": {
+        "emre": {
+          "README.txt": "Hi, I'm Emre.\\nScientific computing, parallel & distributed systems, HPC.\\n\\nTry: ls, cd projects, cat notes.txt\\n\\nAlso: open home | open rss | open about | open hpc",
+          "projects": {
+            "beowulf.md": "# Beowulf Revival\\n- wolf00 head\\n- wolf01..N workers\\n- private LAN\\n",
+            "mpi": {
+              "pi.txt": "π via midpoint rule: broadcast(n) + reduce(sum).\\nNext: halo exchange / stencil.",
+              "stencil.txt": "2D halo exchange pattern: neighbor exchange -> local compute -> diagnostics."
+            }
+          },
+          "notes.txt": "Notes:\\n- Reproducible environments matter.\\n- Deterministic builds beat tribal knowledge.\\n- Measure, don’t guess.\\n",
+          ".secret": { "egg.txt": "You found it.\\nType: wolf up" }
+        }
+      },
+      "etc": { "hosts": "127.0.0.1 localhost\\n192.168.0.100 wolf00\\n192.168.0.101 wolf01\\n" },
+      "var": {}, "tmp": {}
+    }
+  };
+
+  // state
+  let cwd = "/home/emre";
+  const history = [];
+  let histPtr = 0;
+
+  let eggMode = false;
+  let eggTimer = null;
+
+  function nowClock(){
+    const d = new Date();
+    const hh = String(d.getHours()).padStart(2,"0");
+    const mm = String(d.getMinutes()).padStart(2,"0");
+    const ss = String(d.getSeconds()).padStart(2,"0");
+    clockEl.textContent = `${hh}:${mm}:${ss}`;
+  }
+  setInterval(nowClock, 1000);
+  nowClock();
+
+  function setStatus(msg){
+    statusEl.textContent = msg;
+    if (msg !== "Ready.") setTimeout(()=> statusEl.textContent = "Ready.", 900);
+  }
+
+  function renderPrompt(){
+    const short = cwd.replace("/home/emre", "~");
+    promptEl.textContent = `emre@lab:${short}$`;
+  }
+
+  function normPath(p){
+    const parts = p.split("/").filter(Boolean);
+    const out = [];
+    for (const part of parts){
+      if (part === ".") continue;
+      if (part === "..") out.pop();
+      else out.push(part);
+    }
+    return "/" + out.join("/");
+  }
+  function pathJoin(base, p){
+    if (!p || p === ".") return base;
+    if (p === "/") return "/";
+    if (p.startsWith("/")) return normPath(p);
+    return normPath(base.replace(/\/$/,"") + "/" + p);
+  }
+  function getNode(path){
+    const parts = path.split("/").filter(Boolean);
+    let node = fs["/"];
+    if (parts.length === 0) return node;
+    for (const part of parts){
+      if (node && typeof node === "object" && part in node) node = node[part];
+      else return null;
+    }
+    return node;
+  }
+  function isDir(node){ return node && typeof node === "object"; }
+
+  // PRINT (fix: if strings contain literal "\n", render as real newlines)
+  function write(text){
+    const normalized = String(text).replace(/\\n/g, "\n");
+    const lines = normalized.split("\n");
+    for (const line of lines){
+      screen.textContent += line + "\n";
+    }
+    screen.scrollTop = screen.scrollHeight;
+  }
+
+  function cmd_help(){
+    return [
+      "mini-shell commands:",
+      "  help                 show this help",
+      "  ls [path]            list directory",
+      "  pwd                  print current directory",
+      "  cd [path]            change directory",
+      "  cat <file>           show file",
+      "  echo <text>          print text",
+      "  uname [-a]           show system info (simulated)",
+      "  date                 show current time",
+      "  clear                clear screen",
+      "  open <home|rss|about|hpc>   navigate",
+      ""
+    ].join("\n");
+  }
+
+  function cmd_ls(arg){
+    const target = pathJoin(cwd, arg || ".");
+    const node = getNode(target);
+    if (!node) return `ls: cannot access '${arg || target}': No such file or directory`;
+    if (!isDir(node)) return `${arg || target}`;
+    return Object.keys(node).join("  ");
+  }
+
+  function cmd_pwd(){ return cwd; }
+
+  function cmd_cd(arg){
+    const target = pathJoin(cwd, arg || "/home/emre");
+    const node = getNode(target);
+    if (!node) return `cd: no such file or directory: ${arg || target}`;
+    if (!isDir(node)) return `cd: not a directory: ${arg || target}`;
+    cwd = target;
+    renderPrompt();
+    return "";
+  }
+
+  function cmd_cat(arg){
+    if (!arg) return "cat: missing operand";
+    const target = pathJoin(cwd, arg);
+    const node = getNode(target);
+    if (node == null) return `cat: ${arg}: No such file or directory`;
+    if (isDir(node)) return `cat: ${arg}: Is a directory`;
+    return String(node);
+  }
+
+  function cmd_echo(args){ return args || ""; }
+
+  function cmd_uname(arg){
+    if (arg === "-a") return "Linux lab 6.6.0-sim #1 SMP PREEMPT (simulated) x86_64 GNU/Linux";
+    return "Linux";
+  }
+
+  function cmd_date(){ return new Date().toString(); }
+
+  function cmd_clear(){ screen.textContent = ""; return ""; }
+
+  function cmd_open(where){
+    const key = (where || "").trim().toLowerCase();
+    if (!key) return 'open: missing target (try: open home)';
+    if (!links[key]) return `open: unknown target "${where}" (try: open home)`;
+    write(`opening ${key}…`);
+    window.location.href = links[key];
+    return "";
+  }
+
+  function startEgg(){
+    if (eggMode) return;
+    eggMode = true;
+    write("WOLFOS BOOT SEQUENCE…");
+    write("----------------------");
+    write("[OK] link up: private LAN");
+    write("[OK] head node: wolf00");
+    write("[OK] workers: wolf01..wolfNN");
+    write("[OK] MPI heartbeat: halo exchange");
+    write("----------------------");
+    write("Type: 'exit' to return.");
+    write("");
+
+    let t = 0;
+    eggTimer = setInterval(()=>{
+      if (!eggMode) return;
+      const blink = (t++ % 2 === 0) ? "█" : " ";
+      write(`wolf pack sync ${blink}`);
+      if (t > 6) {
+        clearInterval(eggTimer);
+        eggTimer = null;
+        write("");
+        write("Tip: In real MPI, overlap halo exchange + compute when possible.");
+      }
+    }, 260);
+  }
+
+  function stopEgg(){
+    eggMode = false;
+    if (eggTimer) { clearInterval(eggTimer); eggTimer = null; }
+    write("Exiting egg mode.");
+  }
+
+  function run(line){
+    const raw = (line || "").trim();
+    if (!raw) return;
+
+    write(`${promptEl.textContent} ${raw}`);
+
+    history.push(raw);
+    histPtr = history.length;
+
+    const [cmd, ...rest] = raw.split(" ");
+    const args = rest.join(" ").trim();
+
+    if (eggMode && cmd === "exit"){
+      stopEgg();
+      return;
+    }
+
+    if (raw === "wolf up" || raw === "beowulf" || raw === "unlock"){
+      startEgg();
+      return;
+    }
+    if (raw === "sudo make me a sandwich"){
+      write("Okay. 🥪 (simulated)");
+      return;
+    }
+
+    let out = "";
+    switch(cmd){
+      case "help": out = cmd_help(); break;
+      case "ls": out = cmd_ls(args); break;
+      case "pwd": out = cmd_pwd(); break;
+      case "cd": out = cmd_cd(args); break;
+      case "cat": out = cmd_cat(args); break;
+      case "echo": out = cmd_echo(args); break;
+      case "uname": out = cmd_uname(args); break;
+      case "date": out = cmd_date(); break;
+      case "clear": out = cmd_clear(); break;
+      case "open": out = cmd_open(args); break;
+      default: out = `${cmd}: command not found`;
+    }
+    if (out) write(out);
+  }
+
+  // boot
+  write("404: the page you requested doesn’t exist here.");
+  write("mini shell ready (simulated).");
+  write("type: help");
+  write("");
+  renderPrompt();
+
+  // focus
+  setTimeout(()=> input.focus(), 50);
+
+  input.addEventListener("keydown", (e)=>{
+    if (e.key === "Enter"){
+      e.preventDefault();
+      const v = input.value;
+      input.value = "";
+      run(v);
+      return;
+    }
+    if (e.key === "ArrowUp"){
+      e.preventDefault();
+      histPtr = Math.max(0, histPtr - 1);
+      input.value = history[histPtr] || "";
+      setTimeout(()=> input.setSelectionRange(input.value.length, input.value.length), 0);
+      return;
+    }
+    if (e.key === "ArrowDown"){
+      e.preventDefault();
+      histPtr = Math.min(history.length, histPtr + 1);
+      input.value = history[histPtr] || "";
+      setTimeout(()=> input.setSelectionRange(input.value.length, input.value.length), 0);
+      return;
+    }
+  });
+
+  copyBtn.addEventListener("click", async ()=>{
+    try{
+      const txt = screen.textContent.replace(/\n+$/,"") + "\n";
+      await navigator.clipboard.writeText(txt);
+      setStatus("Copied.");
+    } catch {
+      setStatus("Copy failed.");
+    }
+  });
+})();
+</script>

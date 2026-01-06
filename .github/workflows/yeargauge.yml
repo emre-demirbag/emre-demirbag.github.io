@@ -1,14 +1,17 @@
-name: YearGauge (render)
+name: YearGauge (render + post)
 
 on:
   workflow_dispatch:
   schedule:
-    - cron: "0 */12 * * *"   # every 12 hours, UTC
+    - cron: "0 */12 * * *"  # every 12 hours, UTC
+
+permissions:
+  contents: read
 
 jobs:
-  render:
+  render_and_post:
     runs-on: ubuntu-latest
-    timeout-minutes: 15
+    timeout-minutes: 20
 
     steps:
       - name: Checkout
@@ -25,12 +28,23 @@ jobs:
           pip install -r requirements.txt
           python -m playwright install --with-deps chromium
 
-      - name: Render screenshot
+      - name: Render screenshot + meta
         run: |
-          python run.py --html x.html --out x_card.png --width 1200 --height 675
+          python run.py --html x.html --out x_card.png --meta x_out.json --width 1200 --height 675
 
-      - name: Upload artifact
+      - name: Post to X (OAuth1)
+        env:
+          X_API_KEY: ${{ secrets.X_API_KEY }}
+          X_API_SECRET: ${{ secrets.X_API_SECRET }}
+          X_ACCESS_TOKEN: ${{ secrets.X_ACCESS_TOKEN }}
+          X_ACCESS_TOKEN_SECRET: ${{ secrets.X_ACCESS_TOKEN_SECRET }}
+        run: |
+          python post_x.py --image x_card.png --meta x_out.json --text "$(python -c "import json;print(json.load(open('x_out.json'))['tweet_text'])")"
+
+      - name: Upload artifacts
         uses: actions/upload-artifact@v4
         with:
           name: x_card
-          path: x_card.png
+          path: |
+            x_card.png
+            x_out.json

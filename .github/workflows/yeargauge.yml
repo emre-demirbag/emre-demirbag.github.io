@@ -1,0 +1,36 @@
+name: YearGauge (render)
+
+on:
+  workflow_dispatch:
+  schedule:
+    - cron: "0 */12 * * *"   # every 12 hours, UTC
+
+jobs:
+  render:
+    runs-on: ubuntu-latest
+    timeout-minutes: 15
+
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Set up Python
+        uses: actions/setup-python@v5
+        with:
+          python-version: "3.11"
+
+      - name: Install deps
+        run: |
+          python -m pip install --upgrade pip
+          pip install -r requirements.txt
+          python -m playwright install --with-deps chromium
+
+      - name: Render screenshot
+        run: |
+          python run.py --html x.html --out x_card.png --width 1200 --height 675
+
+      - name: Upload artifact
+        uses: actions/upload-artifact@v4
+        with:
+          name: x_card
+          path: x_card.png

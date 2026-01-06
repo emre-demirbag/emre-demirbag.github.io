@@ -1,0 +1,186 @@
+---
+layout: null
+permalink: /x.html
+---
+
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width,initial-scale=1" />
+  <title>YearGauge — X Card</title>
+  <style>
+    /* Minimal, high-contrast, timeline-friendly */
+    html, body {
+      margin: 0;
+      padding: 0;
+      background: #0b0f0b;
+      color: #eaffea;
+      font-family: system-ui, -apple-system, Segoe UI, Roboto, Helvetica, Arial, sans-serif;
+    }
+
+    /* Fixed layout target: 1200x628 (handled by headless viewport) */
+    .card {
+      width: 100%;
+      height: 100vh;
+      box-sizing: border-box;
+      padding: 46px 52px;
+      display: flex;
+      flex-direction: column;
+      justify-content: center;
+      gap: 26px;
+    }
+
+    .title {
+      font-size: 56px;
+      font-weight: 800;
+      letter-spacing: 0.5px;
+      color: #dfffdc;
+      margin: 0;
+      line-height: 1.05;
+      text-shadow: 0 0 12px rgba(97,255,97,0.15);
+    }
+
+    .subtitle {
+      font-size: 22px;
+      opacity: 0.9;
+      margin: 0;
+      color: #bfeebf;
+    }
+
+    .barFrame {
+      border: 6px solid #eaffea;
+      border-radius: 18px;
+      padding: 18px;
+      background: #050705;
+      box-shadow: 0 0 0 6px rgba(97,255,97,0.08);
+    }
+
+    .barOuter {
+      height: 84px;
+      border: 4px solid #eaffea;
+      border-radius: 12px;
+      background: #000;
+      overflow: hidden;
+      position: relative;
+    }
+
+    .barFill {
+      height: 100%;
+      width: 0%;
+      background: #61ff61;
+      box-shadow: inset 0 0 0 3px rgba(0,0,0,0.15);
+      border-right: 6px solid #0b0f0b;
+    }
+
+    .metaRow {
+      display: flex;
+      justify-content: space-between;
+      gap: 18px;
+      flex-wrap: wrap;
+      margin-top: 14px;
+      font-size: 22px;
+      color: #bfeebf;
+    }
+
+    .metaRow b { color: #eaffea; }
+
+    /* Keep safe margins: no content too close to edges */
+    .safeNote {
+      font-size: 14px;
+      opacity: 0.0; /* intentionally invisible; keeps spacing consistent if needed */
+      margin: 0;
+    }
+  </style>
+</head>
+
+<body>
+  <div class="card">
+    <div>
+      <h1 class="title" id="line1">---- is --.--% complete.</h1>
+      <p class="subtitle" id="line2">--d --h left</p>
+    </div>
+
+    <div class="barFrame">
+      <div class="barOuter" aria-label="year progress bar">
+        <div class="barFill" id="fill"></div>
+      </div>
+      <div class="metaRow">
+        <span><b id="pct">--.--%</b></span>
+        <span id="utc">UTC</span>
+      </div>
+    </div>
+
+    <p class="safeNote">.</p>
+  </div>
+
+  <script>
+    (function () {
+      // Compute year progress strictly in UTC
+      function pad2(n){ return String(n).padStart(2,"0"); }
+
+      function isLeap(y){
+        return (y % 4 === 0 && y % 100 !== 0) || (y % 400 === 0);
+      }
+
+      function computeUTC(now){
+        var y = now.getUTCFullYear();
+        var start = Date.UTC(y, 0, 1, 0, 0, 0, 0);
+        var end   = Date.UTC(y + 1, 0, 1, 0, 0, 0, 0);
+
+        var total = end - start;
+        var done  = now.getTime() - start;
+        if (done < 0) done = 0;
+        if (done > total) done = total;
+
+        var pct = (done / total) * 100;
+
+        var leftMs = total - done;
+        var leftDays = Math.floor(leftMs / 86400000);
+        var leftHours = Math.floor((leftMs % 86400000) / 3600000);
+
+        return { y: y, pct: pct, leftDays: leftDays, leftHours: leftHours };
+      }
+
+      function fmtUTC(now){
+        var y = now.getUTCFullYear();
+        var mo = pad2(now.getUTCMonth()+1);
+        var d = pad2(now.getUTCDate());
+        var h = pad2(now.getUTCHours());
+        var mi = pad2(now.getUTCMinutes());
+        return "UTC " + y + "-" + mo + "-" + d + " " + h + ":" + mi;
+      }
+
+      function update(){
+        var now = new Date();
+        var r = computeUTC(now);
+
+        var pctStr = r.pct.toFixed(2) + "%";
+        document.getElementById("pct").textContent = pctStr;
+        document.getElementById("line1").textContent = r.y + " is " + pctStr + " complete.";
+        document.getElementById("line2").textContent = r.leftDays + "d " + r.leftHours + "h left";
+        document.getElementById("utc").textContent = fmtUTC(now);
+
+        var fill = document.getElementById("fill");
+        fill.style.width = r.pct.toFixed(4) + "%";
+
+        // Expose computed values to the renderer
+        window.__YEARGAUGE__ = {
+          year: r.y,
+          pct: r.pct,
+          pctStr: pctStr,
+          leftDays: r.leftDays,
+          leftHours: r.leftHours,
+          utcLabel: fmtUTC(now)
+        };
+
+        // Signal ready for screenshot
+  
+        window.__YG_READY = true;
+      }
+
+      update();
+    })();
+  </script>
+</body>
+</html>

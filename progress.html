@@ -1,0 +1,497 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width,initial-scale=1" />
+  <title>Year Progress — Emre Demirbağ</title>
+
+  <style>
+    /* Keep it simple, early-00s portal + Matrix accents */
+    body{
+      margin:0;
+      background:#cfcfcf;
+      color:#111;
+      font-family: Verdana, Arial, Helvetica, sans-serif;
+    }
+    a{ color:#0000EE; }
+    a:visited{ color:#551A8B; }
+    a:hover{ color:#00aa55; }
+
+    .wrap{ width: 980px; max-width: 98vw; margin: 18px auto 28px; }
+    .banner{
+      background:#f3e36a;
+      border:4px solid #000;
+      box-shadow: 6px 6px 0 rgba(0,0,0,.25);
+      padding: 16px 18px 12px;
+    }
+    .toprow{
+      display:flex;
+      justify-content:space-between;
+      align-items:flex-end;
+      gap:12px;
+      flex-wrap:wrap;
+    }
+    .title{
+      font-size: 40px;
+      font-weight: 900;
+      letter-spacing: 2px;
+      margin:0;
+      text-transform: uppercase;
+    }
+    .tagline{ margin-top: 6px; font-size: 15px; }
+    .tagline .dot{ padding: 0 8px; color:#0a0; }
+
+    .dt{
+      font-family: "Courier New", Courier, monospace;
+      font-size: 13px;
+      color:#0a0;
+      background:#0b120b;
+      border:2px solid #000;
+      padding: 6px 10px;
+      white-space: nowrap;
+    }
+
+    .frame{ width:100%; border-collapse: separate; border-spacing: 18px 14px; }
+    .cols{ width:100%; border-collapse: separate; border-spacing: 18px 0; }
+    .left{ width: 240px; vertical-align: top; }
+    .mid{ width: auto; vertical-align: top; }
+    .right{ width: 260px; vertical-align: top; }
+
+    .panel{
+      background:#fff;
+      border:4px solid #000;
+      box-shadow: 6px 6px 0 rgba(0,0,0,.18);
+    }
+    .cap{
+      display:inline-block;
+      background:#86dbff;
+      border-right:4px solid #000;
+      border-bottom:4px solid #000;
+      padding: 6px 12px;
+      font-weight: 900;
+      letter-spacing: 1px;
+      text-transform: uppercase;
+      font-size: 18px;
+    }
+    .pad{ padding: 12px 14px 14px; }
+    .small{ font-size: 13px; line-height: 1.55; }
+    .mono{ font-family: "Courier New", Courier, monospace; }
+    .muted{ color:#333; }
+
+    .menu a{
+      display:block;
+      margin: 10px 12px;
+      padding: 10px 12px;
+      border:3px solid #000;
+      background:#f2f2f2;
+      text-decoration:none;
+      font-weight: 900;
+      letter-spacing: .5px;
+      text-transform: uppercase;
+    }
+    .menu a.active{
+      background:#f0a6d6;
+      color:#2a0a7a;
+    }
+
+    .hr{ border:0; border-top:3px solid #000; margin: 12px 0; }
+
+    /* Progress UI */
+    .bigPct{
+      font-size: 36px;
+      font-weight: 900;
+      letter-spacing: 1px;
+      margin: 6px 0 0;
+    }
+    .subline{ margin-top: 6px; }
+    .gridNote{ display:flex; gap:10px; flex-wrap:wrap; margin-top: 10px; }
+    .pill{
+      display:inline-block;
+      border:2px solid #000;
+      background:#f7f7f7;
+      padding: 4px 8px;
+      font-size: 12px;
+    }
+
+    .barWrap{
+      margin-top: 10px;
+      border:3px solid #000;
+      background:#f2f2f2;
+      padding: 8px;
+    }
+    .barOuter{
+      border:2px solid #000;
+      background:#fff;
+      height: 34px;
+      position: relative;
+      overflow: hidden;
+    }
+    .barFill{
+      height: 100%;
+      width: 0%;
+      background: #61ff61; /* bright portal green */
+      border-right: 3px solid #0b120b;
+      box-shadow: inset 0 0 0 2px rgba(0,0,0,.05);
+    }
+    .barTick{
+      position:absolute;
+      top:0; bottom:0;
+      width:1px;
+      background: rgba(0,0,0,.15);
+    }
+    .barLabel{
+      margin-top: 8px;
+      font-size: 13px;
+      display:flex;
+      justify-content:space-between;
+      gap:10px;
+      flex-wrap:wrap;
+    }
+
+    .miniBarRow{ margin-top: 10px; }
+    .miniTitle{ font-weight: 900; text-transform: uppercase; letter-spacing: .5px; }
+    .miniOuter{
+      margin-top: 6px;
+      border:2px solid #000;
+      background:#fff;
+      height: 18px;
+      overflow:hidden;
+    }
+    .miniFill{
+      height:100%;
+      width:0%;
+      background:#61ff61;
+      border-right: 2px solid #0b120b;
+    }
+
+    .btn{
+      appearance:none;
+      border:3px solid #000;
+      background:#e8e8e8;
+      padding: 8px 10px;
+      font-weight: 900;
+      cursor:pointer;
+      text-transform: uppercase;
+      letter-spacing: .5px;
+      font-size: 12px;
+    }
+    .btn:hover{ filter: brightness(.98); }
+    textarea{
+      width:100%;
+      border:2px solid #000;
+      padding: 8px;
+      font-family: "Courier New", Courier, monospace;
+      font-size: 12px;
+      resize: vertical;
+      min-height: 92px;
+      box-sizing: border-box;
+    }
+
+    .footerbar{
+      margin-top: 14px;
+      background:#fff;
+      border:4px solid #000;
+      box-shadow: 6px 6px 0 rgba(0,0,0,.12);
+      padding: 10px 12px;
+      font-size: 14px;
+      text-align:center;
+    }
+    .footerbar a{ font-weight: 900; }
+
+    @media (max-width: 920px){
+      .cols, .cols tr, .cols td{ display:block; width:100%; }
+      .left, .mid, .right{ width:100%; }
+      .wrap{ margin-top: 12px; }
+      .title{ font-size: 32px; }
+    }
+  </style>
+</head>
+
+<body>
+  <div class="wrap">
+
+    <div class="banner">
+      <div class="toprow">
+        <div>
+          <h1 class="title">Year Progress</h1>
+          <div class="tagline">
+            Emre Demirbağ
+          </div>
+        </div>
+        <div class="dt" id="dt">-- --- -- ---- --:--:--</div>
+      </div>
+    </div>
+
+    <table class="frame" role="presentation">
+      <tr>
+        <td>
+
+          <table class="cols" role="presentation">
+            <tr>
+
+              <!-- LEFT -->
+              <td class="left">
+                <div class="panel">
+                  <div class="cap">Menu</div>
+                  <div class="menu">
+                    <a class="active" href="#now">Now</a>
+                    <a href="#share">Share</a>
+                    <a href="#about">About</a>
+                  </div>
+                </div>
+
+                <div style="height:14px;"></div>
+
+                <div class="panel">
+                  <div class="cap">Stamp</div>
+                  <div class="pad small">
+                    Best viewed at: <b>800×600</b> · caffeine required ☕<br/>
+                    <span class="mono">local time</span> · updates every second
+                  </div>
+                </div>
+              </td>
+
+              <!-- MID -->
+              <td class="mid">
+                <div class="panel" id="now">
+                  <div class="cap">Now</div>
+                  <div class="pad small">
+                    <div class="mono muted" id="yearLine">Year: ----</div>
+                    <div class="bigPct" id="yearPct">--.--%</div>
+                    <div class="subline" id="yearSub">-- days -- hours left</div>
+
+                    <div class="gridNote">
+                      <span class="pill" id="dayOfYear">DOY: --/--</span>
+                      <span class="pill" id="weekOfYear">Week: --/--</span>
+                      <span class="pill" id="milestone">Milestone: --</span>
+                    </div>
+
+                    <div class="barWrap" aria-label="Year progress bar">
+                      <div class="barOuter">
+                        <!-- ticks at 25/50/75 -->
+                        <span class="barTick" style="left:25%;"></span>
+                        <span class="barTick" style="left:50%;"></span>
+                        <span class="barTick" style="left:75%;"></span>
+                        <div class="barFill" id="barFill"></div>
+                      </div>
+                      <div class="barLabel">
+                        <span><b>0%</b></span>
+                        <span class="mono" id="barMidLabel">progress: --.--%</span>
+                        <span><b>100%</b></span>
+                      </div>
+                    </div>
+
+                    <div class="hr"></div>
+
+                    <div class="miniBarRow">
+                      <div class="miniTitle">Month progress</div>
+                      <div class="miniOuter"><div class="miniFill" id="mFill"></div></div>
+                      <div class="muted mono" id="mLabel">--</div>
+                    </div>
+
+                    <div class="miniBarRow">
+                      <div class="miniTitle">Week progress</div>
+                      <div class="miniOuter"><div class="miniFill" id="wFill"></div></div>
+                      <div class="muted mono" id="wLabel">--</div>
+                    </div>
+
+                    <div class="miniBarRow">
+                      <div class="miniTitle">Day progress</div>
+                      <div class="miniOuter"><div class="miniFill" id="dFill"></div></div>
+                      <div class="muted mono" id="dLabel">--</div>
+                    </div>
+
+                  </div>
+                </div>
+
+                <div style="height:18px;"></div>
+
+                <div class="panel" id="share">
+                  <div class="cap">Share</div>
+                  <div class="pad small">
+                    <p><b>Auto post text (X-friendly):</b></p>
+                    <textarea id="shareText" readonly></textarea>
+                    <div style="margin-top:10px; display:flex; gap:10px; flex-wrap:wrap;">
+                      <button class="btn" id="copyBtn">Copy</button>
+                      <button class="btn" id="refreshBtn">Refresh</button>
+                    </div>
+                    <p class="muted" style="margin-top:10px;">
+                      Tip: daily post at a fixed time looks iconic. Keep it minimal — the bar is the brand.
+                    </p>
+                  </div>
+                </div>
+              </td>
+
+              <!-- RIGHT -->
+              <td class="right">
+                <div class="panel" id="about">
+                  <div class="cap">About</div>
+                  <div class="pad small">
+                    <p style="margin:0 0 10px;">
+                      A tiny page that turns time into a clean, visible bar — no noise, just progress.
+                      The aesthetic is intentionally early-2000s: bold borders, simple layout, green signal.
+                    </p>
+                    <p style="margin:0;"><b>Use:</b> embed, share, or keep as a hidden “egg” page.</p>
+                  </div>
+                </div>
+
+              </td>
+            </tr>
+          </table>
+
+          <div class="footerbar">
+            [ <a href="#now">Now</a> ]&nbsp;
+            [ <a href="#share">Share</a> ]&nbsp;
+            [ <a href="#about">About</a> ]<br/>
+            <span class="muted">© <span id="yy"></span> Emre Demirbağ · “green bar / early-00s sci-fi”</span>
+          </div>
+
+        </td>
+      </tr>
+    </table>
+  </div>
+
+  <script>
+  (function(){
+    function pad2(n){ return String(n).padStart(2,"0"); }
+
+    function dayOfYear(d){
+      var start = new Date(d.getFullYear(),0,1);
+      var diff = d - start;
+      return Math.floor(diff / 86400000) + 1;
+    }
+
+    // ISO-ish week number (simple, good enough for this vibe)
+    function weekOfYear(d){
+      var onejan = new Date(d.getFullYear(),0,1);
+      var millis = d - onejan;
+      var day = Math.floor(millis / 86400000);
+      return Math.floor((day + onejan.getDay()) / 7) + 1;
+    }
+
+    function isLeap(y){
+      return (y % 4 === 0 && y % 100 !== 0) || (y % 400 === 0);
+    }
+
+    function milestoneLabel(p){
+      if (p >= 99.0) return "99%+";
+      if (p >= 95.0) return "95%";
+      if (p >= 90.0) return "90%";
+      if (p >= 75.0) return "75%";
+      if (p >= 50.0) return "50%";
+      if (p >= 25.0) return "25%";
+      if (p >= 10.0) return "10%";
+      return "warming up";
+    }
+
+    function fmtDateTime(d){
+      var days = ["Sun","Mon","Tue","Wed","Thu","Fri","Sat"];
+      var months = ["Jan","Feb","Mar","Apr","May","Jun","Jul","Aug","Sep","Oct","Nov","Dec"];
+      return days[d.getDay()] + " " +
+        months[d.getMonth()] + " " +
+        pad2(d.getDate()) + " " +
+        d.getFullYear() + " " +
+        pad2(d.getHours()) + ":" + pad2(d.getMinutes()) + ":" + pad2(d.getSeconds());
+    }
+
+    function update(){
+      var now = new Date();
+      var y = now.getFullYear();
+
+      var start = new Date(y,0,1,0,0,0,0);
+      var end   = new Date(y+1,0,1,0,0,0,0);
+
+      var total = end - start;
+      var done  = now - start;
+      if (done < 0) done = 0;
+      if (done > total) done = total;
+
+      var pct = (done / total) * 100;
+      var pctStr = pct.toFixed(2) + "%";
+
+      // remaining
+      var leftMs = total - done;
+      var leftDays = Math.floor(leftMs / 86400000);
+      var leftHours = Math.floor((leftMs % 86400000) / 3600000);
+
+      // month progress
+      var mStart = new Date(y, now.getMonth(), 1, 0,0,0,0);
+      var mEnd = new Date(y, now.getMonth()+1, 1, 0,0,0,0);
+      var mPct = ((now - mStart) / (mEnd - mStart)) * 100;
+      if (mPct < 0) mPct = 0; if (mPct > 100) mPct = 100;
+
+      // week progress (Sunday->Saturday vibe, matches old-school feel)
+      var dow = now.getDay(); // 0..6
+      var wStart = new Date(y, now.getMonth(), now.getDate() - dow, 0,0,0,0);
+      var wEnd = new Date(y, now.getMonth(), now.getDate() - dow + 7, 0,0,0,0);
+      var wPct = ((now - wStart) / (wEnd - wStart)) * 100;
+      if (wPct < 0) wPct = 0; if (wPct > 100) wPct = 100;
+
+      // day progress
+      var dStart = new Date(y, now.getMonth(), now.getDate(), 0,0,0,0);
+      var dEnd = new Date(y, now.getMonth(), now.getDate()+1, 0,0,0,0);
+      var dPct = ((now - dStart) / (dEnd - dStart)) * 100;
+      if (dPct < 0) dPct = 0; if (dPct > 100) dPct = 100;
+
+      // elements
+      document.getElementById("dt").textContent = fmtDateTime(now);
+
+      document.getElementById("yearLine").textContent = "Year: " + y + (isLeap(y) ? " (leap)" : "");
+      document.getElementById("yearPct").textContent = pctStr;
+      document.getElementById("yearSub").textContent = leftDays + " days " + leftHours + " hours left";
+
+      document.getElementById("dayOfYear").textContent = "DOY: " + dayOfYear(now) + "/" + (isLeap(y) ? "366" : "365");
+      document.getElementById("weekOfYear").textContent = "Week: " + weekOfYear(now) + "/~52";
+      document.getElementById("milestone").textContent = "Milestone: " + milestoneLabel(pct);
+
+      var bar = document.getElementById("barFill");
+      bar.style.width = pct.toFixed(4) + "%";
+      document.getElementById("barMidLabel").textContent = "progress: " + pctStr;
+
+      document.getElementById("mFill").style.width = mPct.toFixed(4) + "%";
+      document.getElementById("mLabel").textContent = "month: " + (now.getMonth()+1) + " · " + mPct.toFixed(2) + "%";
+
+      document.getElementById("wFill").style.width = wPct.toFixed(4) + "%";
+      document.getElementById("wLabel").textContent = "week: " + weekOfYear(now) + " · " + wPct.toFixed(2) + "%";
+
+      document.getElementById("dFill").style.width = dPct.toFixed(4) + "%";
+      document.getElementById("dLabel").textContent = "day: " + dPct.toFixed(2) + "%";
+
+      // X share text (100-cell bar reflects real progress; keeps same 3-line layout)
+      var blocks = 100;
+      var filled = Math.floor(pct); // 1.25% -> 1 filled, 98.90% -> 98 filled
+      if (filled < 0) filled = 0;
+      if (filled > blocks) filled = blocks;
+      var bar100 = "▰".repeat(filled) + "▱".repeat(blocks - filled);
+
+      var share =
+        y + " is " + Math.floor(pct) + "% complete.\n" +
+        "⏳ " + pctStr + " · " + leftDays + "d " + leftHours + "h left\n" +
+        bar100 + "\n" +
+        "(auto-updating bar: emre-demirbag.github.io/progress.html)";
+      document.getElementById("shareText").value = share;
+    }
+
+    update();
+    setInterval(update, 1000);
+
+    document.getElementById("yy").textContent = String(new Date().getFullYear());
+
+    document.getElementById("copyBtn").addEventListener("click", async function(){
+      try{
+        await navigator.clipboard.writeText(document.getElementById("shareText").value);
+        this.textContent = "Copied!";
+        var btn = this;
+        setTimeout(function(){ btn.textContent = "Copy"; }, 900);
+      }catch(e){
+        alert("Copy failed.");
+      }
+    });
+
+    document.getElementById("refreshBtn").addEventListener("click", function(){
+      update();
+    });
+  })();
+  </script>
+</body>
+</html>

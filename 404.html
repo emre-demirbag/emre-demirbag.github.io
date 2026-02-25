@@ -151,7 +151,7 @@ layout: default
       </div>
 
       <div class="hintRow">
-        Commands: <span class="k">help</span>, <span class="k">ls</span>, <span class="k">pwd</span>, <span class="k">cd</span>, <span class="k">cat</span>, <span class="k">echo</span>, <span class="k">uname</span>, <span class="k">date</span>, <span class="k">clear</span>, <span class="k">open</span>
+        Commands: <span class="k">help</span>, <span class="k">ls</span>, <span class="k">pwd</span>, <span class="k">cd</span>, <span class="k">cat</span>, <span class="k">echo</span>, <span class="k">uname</span>, <span class="k">date</span>, <span class="k">clear</span>, <span class="k">open</span>, <span class="k">matrix</span>, <span class="k">emre</span>, <span class="k">x</span>, <span class="k">progress</span>, <span class="k">kodtag</span>
         <span style="opacity:.7;">(↑/↓ history)</span>
       </div>
     </div>
@@ -190,7 +190,12 @@ layout: default
     rss:  ORIGIN + "/feed.xml",
     about: ORIGIN + "/about/",
     // You don't currently have /categories/hpc/ on the site, so point hpc to home for now.
-    hpc:  ORIGIN + "/"
+    hpc:  ORIGIN + "/",
+    matrix: ORIGIN + "/matrix.html",
+    emre: ORIGIN + "/emre.html",
+    x: ORIGIN + "/x.html",
+    progress: ORIGIN + "/progress.html",
+    kodtag: "https://kodtag.com"
   };
 
   // “fake FS”
@@ -198,7 +203,7 @@ layout: default
     "/": {
       "home": {
         "emre": {
-          "README.txt": "Hi, I'm Emre.\\nScientific computing, parallel & distributed systems, HPC.\\n\\nTry: ls, cd projects, cat notes.txt\\n\\nAlso: open home | open rss | open about | open hpc",
+          "README.txt": "Hi, I'm Emre.\\nScientific computing, parallel & distributed systems, HPC.\\n\\nTry: ls, cd projects, cat notes.txt\\n\\nAlso: open home | open rss | open about | open hpc | open matrix | open emre | open x | open progress | open kodtag\\nShortcuts: matrix | emre | x | progress | kodtag",
           "projects": {
             "beowulf.md": "# Beowulf Revival\\n- wolf00 head\\n- wolf01..N workers\\n- private LAN\\n",
             "mpi": {
@@ -293,7 +298,12 @@ layout: default
       "  uname [-a]           show system info (simulated)",
       "  date                 show current time",
       "  clear                clear screen",
-      "  open <home|rss|about|hpc>   navigate",
+      "  open <home|rss|about|hpc|matrix|emre|x|progress|kodtag>   navigate",
+      "  matrix               shortcut → /matrix.html",
+      "  emre                 shortcut → /emre.html",
+      "  x                    shortcut → /x.html",
+      "  progress             shortcut → /progress.html",
+      "  kodtag               shortcut → https://kodtag.com",
       ""
     ].join("\n");
   }
@@ -418,6 +428,11 @@ layout: default
       case "date": out = cmd_date(); break;
       case "clear": out = cmd_clear(); break;
       case "open": out = cmd_open(args); break;
+      case "matrix": out = cmd_open("matrix"); break;
+      case "emre": out = cmd_open("emre"); break;
+      case "x": out = cmd_open("x"); break;
+      case "progress": out = cmd_open("progress"); break;
+      case "kodtag": out = cmd_open("kodtag"); break;
       default: out = `${cmd}: command not found`;
     }
     if (out) write(out);

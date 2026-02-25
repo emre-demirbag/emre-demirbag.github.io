@@ -1,0 +1,519 @@
+<!doctype html>
+<html lang="tr">
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width,initial-scale=1" />
+  <title>TV NODE</title>
+  <style>
+    :root{
+      --bg:#0a0c10;
+      --panel:#121622;
+      --stroke:rgba(255,255,255,.12);
+      --stroke2:rgba(255,255,255,.08);
+      --txt:rgba(255,255,255,.92);
+      --muted:rgba(255,255,255,.62);
+      --accent:#6bd6ff;
+      --radius:18px;
+      --shadow:0 18px 60px rgba(0,0,0,.55);
+    }
+    *{box-sizing:border-box}
+    html,body{height:100%;margin:0;background:radial-gradient(900px 700px at 30% 10%, #1b2550 0%, var(--bg) 55%, #06070b 100%); color:var(--txt); font-family: ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas, "Liberation Mono", monospace;}
+    body{display:grid; place-items:center; padding:20px; overflow:hidden;}
+
+    .wrap{
+      width:min(1200px, 96vw);
+      height:min(680px, 92vh);
+      display:grid;
+      grid-template-columns: 1fr 260px;
+      gap:14px;
+      align-items:stretch;
+    }
+
+    .tv{
+      border:1px solid var(--stroke);
+      border-radius: var(--radius);
+      background: linear-gradient(180deg, rgba(18,22,34,.92), rgba(8,10,14,.75));
+      box-shadow: var(--shadow);
+      overflow:hidden;
+      position:relative;
+      min-width:0;
+    }
+
+    /* “CRT” frame */
+    .screen{
+      position:absolute; inset:14px 14px 14px 14px;
+      border-radius: 16px;
+      background:#000;
+      overflow:hidden;
+      border:1px solid rgba(255,255,255,.10);
+    }
+
+    /* content layer */
+    .content{
+      position:absolute; inset:0;
+      display:grid;
+      place-items:center;
+      padding:24px;
+    }
+
+    /* noise layer */
+    canvas#noise{
+      position:absolute; inset:0;
+      width:100%; height:100%;
+      opacity:.18;            /* ana yoğunluk */
+      mix-blend-mode: screen; /* daha zarif */
+      pointer-events:none;
+    }
+
+    /* scanlines + vignette */
+    .crt{
+      position:absolute; inset:0; pointer-events:none;
+      background:
+        radial-gradient(120% 90% at 50% 50%, rgba(0,0,0,0) 55%, rgba(0,0,0,.35) 100%),
+        repeating-linear-gradient(to bottom, rgba(255,255,255,.05) 0px, rgba(255,255,255,.015) 1px, rgba(0,0,0,0) 3px);
+      opacity:.22;
+      mix-blend-mode: overlay;
+    }
+
+    /* OSD */
+    .osd{
+      position:absolute;
+      left:18px; top:18px;
+      display:flex;
+      gap:10px;
+      align-items:center;
+      padding:8px 10px;
+      border-radius: 999px;
+      border:1px solid rgba(255,255,255,.14);
+      background: rgba(0,0,0,.45);
+      backdrop-filter: blur(10px) saturate(130%);
+      -webkit-backdrop-filter: blur(10px) saturate(130%);
+      box-shadow: 0 0 20px rgba(107,214,255,.12);
+      opacity:0;
+      transform: translateY(-6px);
+      transition: opacity .25s ease, transform .25s ease;
+      z-index:5;
+      white-space:nowrap;
+    }
+    .osd.show{ opacity:1; transform: translateY(0); }
+    .osd b{color:var(--accent)}
+    .osd .muted{color:var(--muted)}
+    .osdRight{ margin-left:8px; padding-left:10px; border-left:1px solid rgba(255,255,255,.10); color:rgba(255,255,255,.75);}
+
+    /* Remote */
+    .remote{
+      border:1px solid var(--stroke);
+      border-radius: 28px;
+      background: linear-gradient(180deg, rgba(30,34,44,.85), rgba(10,12,16,.78));
+      box-shadow: var(--shadow);
+      padding:14px;
+      display:flex;
+      flex-direction:column;
+      gap:12px;
+      align-items:stretch;
+      min-height:0;
+    }
+    .remote .title{
+      display:flex; align-items:center; justify-content:space-between;
+      padding:10px 10px;
+      border:1px solid var(--stroke2);
+      border-radius: 16px;
+      background: rgba(0,0,0,.20);
+      color: rgba(255,255,255,.82);
+      font-weight:800;
+      letter-spacing:1px;
+    }
+    .btnGrid{
+      display:grid;
+      grid-template-columns: repeat(3, 1fr);
+      gap:10px;
+      padding: 8px;
+    }
+    .rbtn{
+      height:54px;
+      border-radius:999px;
+      border:1px solid rgba(255,255,255,.12);
+      background: radial-gradient(140% 140% at 30% 20%, rgba(255,255,255,.08), rgba(0,0,0,.22));
+      color: rgba(255,255,255,.85);
+      font-size:20px;
+      cursor:pointer;
+      box-shadow: inset 0 1px 0 rgba(255,255,255,.06);
+      user-select:none;
+    }
+    .rbtn:active{ transform: translateY(1px); }
+    .rbtn.power{ background: radial-gradient(120% 120% at 30% 20%, rgba(255,60,60,.45), rgba(0,0,0,.20)); border-color: rgba(255,60,60,.25); }
+
+    .row2{
+      display:grid; grid-template-columns: 1fr 1fr; gap:10px; padding:0 8px 8px;
+    }
+    .small{
+      height:46px; font-size:14px; letter-spacing:.8px;
+    }
+
+    .legend{
+      padding:10px 10px 6px;
+      color: rgba(255,255,255,.65);
+      font-size:12px;
+      line-height:1.5;
+    }
+    .legend code{ color: rgba(255,255,255,.82); }
+
+    /* Channel screens */
+    .card{
+      width:min(680px, 100%);
+      aspect-ratio: 4 / 3;
+      border-radius: 14px;
+      border:1px solid rgba(255,255,255,.08);
+      background: linear-gradient(180deg, rgba(255,255,255,.03), rgba(0,0,0,.10));
+      display:grid;
+      place-items:center;
+      position:relative;
+      overflow:hidden;
+    }
+    .label{
+      position:absolute; left:14px; bottom:12px;
+      font-size:12px; color: rgba(255,255,255,.70);
+      letter-spacing:1.2px;
+    }
+    .sub{
+      position:absolute; right:14px; bottom:12px;
+      font-size:12px; color: rgba(255,255,255,.70);
+      letter-spacing:1.2px;
+    }
+
+    /* “Static burst” fullscreen overlay when switching */
+    .switchStatic{
+      position:absolute; inset:0;
+      background:#000;
+      opacity:0;
+      pointer-events:none;
+      z-index:6;
+      transition: opacity .12s ease;
+    }
+    .switchStatic.on{ opacity:1; }
+
+    @media (max-width: 980px){
+      body{overflow:auto}
+      .wrap{ grid-template-columns: 1fr; height:auto; }
+      .remote{ border-radius: 18px; }
+      .tv{ height: 66vh; }
+    }
+  </style>
+</head>
+<body>
+
+<div class="wrap">
+  <div class="tv" id="tv">
+    <div class="screen" id="screen">
+      <div class="content" id="content"></div>
+
+      <canvas id="noise"></canvas>
+      <div class="crt"></div>
+
+      <div class="osd" id="osd">
+        <span><b id="osdCh">CH01</b> <span class="muted" id="osdName">STATIC</span></span>
+        <span class="osdRight" id="osdTime">--:--:--</span>
+      </div>
+
+      <div class="switchStatic" id="switchStatic"></div>
+    </div>
+  </div>
+
+  <aside class="remote" aria-label="Remote control">
+    <div class="title">
+      <span>REMOTE</span>
+      <span style="color:rgba(255,255,255,.62);font-size:12px" id="remoteCh">CH01</span>
+    </div>
+
+    <div class="btnGrid">
+      <button class="rbtn power" data-action="power">⏻</button>
+      <button class="rbtn" data-action="chUp">▲</button>
+      <button class="rbtn" data-action="mute">🔇</button>
+
+      <button class="rbtn" data-ch="1">1</button>
+      <button class="rbtn" data-ch="2">2</button>
+      <button class="rbtn" data-ch="3">3</button>
+
+      <button class="rbtn" data-ch="4">4</button>
+      <button class="rbtn" data-ch="5">5</button>
+      <button class="rbtn" data-ch="6">6</button>
+
+      <button class="rbtn" data-ch="7">7</button>
+      <button class="rbtn" data-ch="8">8</button>
+      <button class="rbtn" data-ch="9">9</button>
+
+      <button class="rbtn small" data-action="txt">TXT</button>
+      <button class="rbtn" data-ch="0">0</button>
+      <button class="rbtn small" data-action="chDown">▼</button>
+    </div>
+
+    <div class="row2">
+      <button class="rbtn small" data-action="info">INFO</button>
+      <button class="rbtn small" data-action="test">TEST</button>
+    </div>
+
+    <div class="legend">
+      <div><code>↑/↓</code> kanal</div>
+      <div><code>0–9</code> direkt</div>
+      <div><code>S</code> txt toggle</div>
+      <div><code>I</code> info</div>
+    </div>
+  </aside>
+</div>
+
+<script>
+(() => {
+  const $ = (id) => document.getElementById(id);
+
+  // ===== Channels (şık ama retro) =====
+  const channels = [
+    { id: 1, name: "STATIC", type: "static" },
+    { id: 2, name: "BBC CLOCK", type: "clock" },
+    { id: 3, name: "TEST CARD", type: "test" },
+    { id: 4, name: "SERVICE", type: "text", text: "NO SIGNAL\n\nTry CH02 (clock)\nTry CH03 (test card)\n\nReality: simulated.\nCuriosity: real." },
+    // ileride: teletext / video / matrix / vs
+  ];
+
+  let current = 1;
+  let powerOn = true;
+  let muted = false;
+  let txtEnabled = true;
+
+  const content = $("content");
+  const osd = $("osd");
+  const osdCh = $("osdCh");
+  const osdName = $("osdName");
+  const osdTime = $("osdTime");
+  const remoteCh = $("remoteCh");
+  const switchStatic = $("switchStatic");
+
+  // ===== Clock =====
+  function pad2(n){ return String(n).padStart(2,"0"); }
+  function nowStr(){
+    const d = new Date();
+    return `${pad2(d.getHours())}:${pad2(d.getMinutes())}:${pad2(d.getSeconds())}`;
+  }
+  setInterval(() => { osdTime.textContent = nowStr(); }, 250);
+  osdTime.textContent = nowStr();
+
+  function showOSD(){
+    osd.classList.add("show");
+    clearTimeout(showOSD._t);
+    showOSD._t = setTimeout(() => osd.classList.remove("show"), 1300);
+  }
+
+  function chLabel(n){
+    return "CH" + String(n).padStart(2,"0");
+  }
+
+  // ===== Screens =====
+  function renderStatic(){
+    content.innerHTML = `
+      <div class="card" style="background:#000;">
+        <div class="label">NOISE</div>
+        <div class="sub">${nowStr()}</div>
+      </div>
+    `;
+  }
+
+  function renderText(txt){
+    const safe = (txt || "").replace(/</g,"&lt;").replace(/>/g,"&gt;");
+    content.innerHTML = `
+      <div class="card" style="background:#000; place-items:start; padding:18px;">
+        <pre style="margin:0; color:rgba(255,255,255,.9); font-size:16px; line-height:1.25; white-space:pre-wrap;">${safe}</pre>
+        <div class="label">SERVICE TEXT</div>
+        <div class="sub">${nowStr()}</div>
+      </div>
+    `;
+  }
+
+  function renderTestCard(){
+    content.innerHTML = `
+      <div class="card" style="
+        background:
+          linear-gradient(90deg,#c9c9c9 0 12.5%, #ffe36c 12.5% 25%, #6bf7ff 25% 37.5%, #6bff9a 37.5% 50%,
+                          #ff6bf3 50% 62.5%, #ff6b6b 62.5% 75%, #6b88ff 75% 87.5%, #101215 87.5% 100%);
+      ">
+        <div style="position:absolute; inset:0; background: radial-gradient(70% 70% at 50% 40%, rgba(0,0,0,0) 55%, rgba(0,0,0,.35) 100%);"></div>
+        <div style="position:absolute; bottom:58px; left:0; right:0; height:36px; background:rgba(0,0,0,.65);"></div>
+        <div style="position:absolute; bottom:58px; left:0; right:0; height:36px; display:flex; align-items:center; justify-content:center; letter-spacing:2px; font-weight:900;">
+          TEST CARD • 4:3
+        </div>
+        <div class="label">CALIBRATION</div>
+        <div class="sub">${nowStr()}</div>
+      </div>
+    `;
+  }
+
+  function renderClock(){
+    // Zarif BBC-ish clock (SVG)
+    content.innerHTML = `
+      <div class="card" style="background:#0a0b0f;">
+        <svg viewBox="0 0 800 600" width="100%" height="100%" style="display:block">
+          <defs>
+            <radialGradient id="g" cx="50%" cy="35%" r="70%">
+              <stop offset="0%" stop-color="rgba(255,255,255,.05)"/>
+              <stop offset="60%" stop-color="rgba(0,0,0,0)"/>
+              <stop offset="100%" stop-color="rgba(0,0,0,.55)"/>
+            </radialGradient>
+          </defs>
+          <rect width="800" height="600" fill="#0a0b0f"/>
+          <rect width="800" height="600" fill="url(#g)" opacity=".85"/>
+
+          <!-- marks -->
+          <g transform="translate(400 250)">
+            ${Array.from({length:12}).map((_,i)=>{
+              const a = (i/12)*Math.PI*2;
+              const x1 = Math.cos(a)*150, y1=Math.sin(a)*150;
+              const x2 = Math.cos(a)*175, y2=Math.sin(a)*175;
+              return `<line x1="${x1}" y1="${y1}" x2="${x2}" y2="${y2}" stroke="rgba(107,136,255,.75)" stroke-width="10" stroke-linecap="round"/>`;
+            }).join("")}
+            <circle r="5" fill="rgba(255,255,255,.6)"/>
+            <line id="hh" x1="0" y1="0" x2="0" y2="-85" stroke="rgba(255,227,108,.9)" stroke-width="14" stroke-linecap="round"/>
+            <line id="mm" x1="0" y1="0" x2="0" y2="-120" stroke="rgba(255,227,108,.9)" stroke-width="10" stroke-linecap="round"/>
+            <line id="ss" x1="0" y1="8" x2="0" y2="-145" stroke="rgba(255,227,108,.75)" stroke-width="4" stroke-linecap="round"/>
+          </g>
+
+          <text x="400" y="470" text-anchor="middle" fill="rgba(255,227,108,.85)" style="font-size:86px; font-family: ui-serif, Georgia, serif; letter-spacing:2px;">BBC1</text>
+          <text x="400" y="535" text-anchor="middle" fill="rgba(255,227,108,.72)" style="font-size:48px; font-family: ui-serif, Georgia, serif; letter-spacing:2px;">1985-12-28</text>
+        </svg>
+        <div class="label">CLOCK IDENT</div>
+        <div class="sub">${nowStr()}</div>
+      </div>
+    `;
+
+    const svg = content.querySelector("svg");
+    const hh = svg.querySelector("#hh");
+    const mm = svg.querySelector("#mm");
+    const ss = svg.querySelector("#ss");
+
+    const tick = () => {
+      const d = new Date();
+      const h = d.getHours()%12;
+      const m = d.getMinutes();
+      const s = d.getSeconds() + d.getMilliseconds()/1000;
+
+      const aH = (h + m/60) * 30;      // deg
+      const aM = (m + s/60) * 6;
+      const aS = s * 6;
+
+      hh.setAttribute("transform", `rotate(${aH})`);
+      mm.setAttribute("transform", `rotate(${aM})`);
+      ss.setAttribute("transform", `rotate(${aS})`);
+      requestAnimationFrame(tick);
+    };
+    tick();
+  }
+
+  function renderChannel(n){
+    const ch = channels.find(c => c.id === n) || channels[0];
+    if (!powerOn){
+      content.innerHTML = `<div class="card" style="background:#000;display:grid;place-items:center;color:rgba(255,255,255,.6);letter-spacing:2px;">POWER OFF</div>`;
+      return;
+    }
+    switch(ch.type){
+      case "clock": renderClock(); break;
+      case "test": renderTestCard(); break;
+      case "text": renderText(ch.text); break;
+      case "static":
+      default: renderStatic(); break;
+    }
+  }
+
+  function setChannel(n, {silent=false} = {}){
+    const max = Math.max(...channels.map(c=>c.id));
+    const min = Math.min(...channels.map(c=>c.id));
+    if (n < min) n = max;
+    if (n > max) n = min;
+    current = n;
+
+    osdCh.textContent = chLabel(current);
+    const ch = channels.find(c=>c.id===current);
+    osdName.textContent = ch ? ch.name : "UNKNOWN";
+    remoteCh.textContent = chLabel(current);
+
+    if (!silent){
+      // switch effect: short static burst (over content)
+      switchStatic.classList.add("on");
+      // Render content slightly after burst starts (gives click feel)
+      setTimeout(() => {
+        renderChannel(current);
+        showOSD();
+      }, 120);
+
+      // burst end
+      setTimeout(() => switchStatic.classList.remove("on"), 320);
+    } else {
+      renderChannel(current);
+    }
+  }
+
+  // ===== Noise canvas =====
+  const noise = $("noise");
+  const ctx = noise.getContext("2d", { alpha: true });
+
+  function resize(){
+    const r = noise.getBoundingClientRect();
+    noise.width = Math.floor(r.width * devicePixelRatio);
+    noise.height = Math.floor(r.height * devicePixelRatio);
+  }
+  window.addEventListener("resize", resize, {passive:true});
+  resize();
+
+  let last = 0;
+  function drawNoise(t){
+    requestAnimationFrame(drawNoise);
+    if (!txtEnabled || !powerOn) return;
+
+    // Throttle a bit (smoother & less CPU)
+    if (t - last < 40) return;
+    last = t;
+
+    const w = noise.width, h = noise.height;
+    const img = ctx.createImageData(w, h);
+    const d = img.data;
+
+    // soft noise
+    for (let i=0; i<d.length; i+=4){
+      const v = (Math.random()*255) | 0;
+      d[i] = v; d[i+1] = v; d[i+2] = v;
+      d[i+3] = 40; // alpha
+    }
+    ctx.putImageData(img, 0, 0);
+  }
+  requestAnimationFrame(drawNoise);
+
+  // ===== Remote handlers =====
+  document.querySelectorAll("[data-ch]").forEach(btn => {
+    btn.addEventListener("click", () => setChannel(parseInt(btn.dataset.ch,10)));
+  });
+  document.querySelectorAll("[data-action]").forEach(btn => {
+    btn.addEventListener("click", () => handleAction(btn.dataset.action));
+  });
+
+  function handleAction(a){
+    if (a === "chUp") return setChannel(current+1);
+    if (a === "chDown") return setChannel(current-1);
+    if (a === "power"){ powerOn = !powerOn; setChannel(current,{silent:true}); showOSD(); return; }
+    if (a === "mute"){ muted = !muted; showOSD(); return; }
+    if (a === "txt"){ txtEnabled = !txtEnabled; showOSD(); return; }
+    if (a === "info"){ showOSD(); return; }
+    if (a === "test"){ setChannel(3); return; }
+  }
+
+  // keyboard
+  window.addEventListener("keydown", (e) => {
+    if (e.key === "ArrowUp") { e.preventDefault(); setChannel(current+1); }
+    else if (e.key === "ArrowDown") { e.preventDefault(); setChannel(current-1); }
+    else if (e.key >= "0" && e.key <= "9") { setChannel(parseInt(e.key,10)); }
+    else if (e.key.toLowerCase() === "s") { txtEnabled = !txtEnabled; showOSD(); }
+    else if (e.key.toLowerCase() === "i") { showOSD(); }
+  }, {passive:false});
+
+  // boot
+  setChannel(1, {silent:true});
+  showOSD();
+})();
+</script>
+</body>
+</html>

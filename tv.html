@@ -60,8 +60,8 @@
     canvas#noise{
       position:absolute; inset:0;
       width:100%; height:100%;
-      opacity:.18;            /* ana yoğunluk */
-      mix-blend-mode: screen; /* daha zarif */
+      opacity:.18;
+      mix-blend-mode: screen;
       pointer-events:none;
     }
 
@@ -181,6 +181,42 @@
       letter-spacing:1.2px;
     }
 
+    /* image-based channels */
+    .image-card img,
+    .kodtag-logo{
+      width:100%;
+      height:100%;
+      object-fit:cover;
+      display:block;
+    }
+
+    .image-card{
+      background:#000;
+    }
+
+    /* Kodtag channel */
+    .kodtag-card{
+      background:#000;
+    }
+    .kodtag-link{
+      position:absolute;
+      inset:0;
+      display:flex;
+      align-items:center;
+      justify-content:center;
+      text-decoration:none;
+    }
+    .kodtag-logo-wrap{
+      width:120%;
+      display:flex;
+      justify-content:center;
+      animation: kodtag-pan 4s ease-in-out infinite alternate;
+    }
+    @keyframes kodtag-pan{
+      0%   { transform: translateX(-6%); }
+      100% { transform: translateX(6%); }
+    }
+
     /* “Static burst” fullscreen overlay when switching */
     .switchStatic{
       position:absolute; inset:0;
@@ -242,7 +278,8 @@
       <button class="rbtn" data-ch="8">8</button>
       <button class="rbtn" data-ch="9">9</button>
 
-      <button class="rbtn small" data-action="txt">TXT</button>
+      <!-- TXT -> TTX, data-action aynı kaldı -->
+      <button class="rbtn small" data-action="txt">TTX</button>
       <button class="rbtn" data-ch="0">0</button>
       <button class="rbtn small" data-action="chDown">▼</button>
     </div>
@@ -265,13 +302,16 @@
 (() => {
   const $ = (id) => document.getElementById(id);
 
-  // ===== Channels (şık ama retro) =====
+  // ===== Channels =====
   const channels = [
-    { id: 1, name: "STATIC", type: "static" },
-    { id: 2, name: "BBC CLOCK", type: "clock" },
-    { id: 3, name: "TEST CARD", type: "test" },
-    { id: 4, name: "SERVICE", type: "text", text: "NO SIGNAL\n\nTry CH02 (clock)\nTry CH03 (test card)\n\nReality: simulated.\nCuriosity: real." },
-    // ileride: teletext / video / matrix / vs
+    { id: 1, name: "STATIC",     type: "static" },
+    { id: 2, name: "BBC CLOCK",  type: "clock" },
+    { id: 3, name: "TEST CARD",  type: "test" },
+    { id: 4, name: "SERVICE",    type: "text",  text: "NO SIGNAL\\n\\nTry CH02 (clock)\\nTry CH03 (test card)\\n\\nReality: simulated.\\nCuriosity: real." },
+    { id: 5, name: "COSMIC",     type: "image", src: "assets/images/cosmic.gif" },
+    { id: 6, name: "COLOR BARS", type: "image", src: "assets/images/rainbow.gif" },
+    { id: 7, name: "KODTAG",     type: "kodtag" }
+    // ileride 8-9'a başka şeyler konur
   ];
 
   let current = 1;
@@ -346,7 +386,6 @@
   }
 
   function renderClock(){
-    // Zarif BBC-ish clock (SVG)
     content.innerHTML = `
       <div class="card" style="background:#0a0b0f;">
         <svg viewBox="0 0 800 600" width="100%" height="100%" style="display:block">
@@ -360,7 +399,6 @@
           <rect width="800" height="600" fill="#0a0b0f"/>
           <rect width="800" height="600" fill="url(#g)" opacity=".85"/>
 
-          <!-- marks -->
           <g transform="translate(400 250)">
             ${Array.from({length:12}).map((_,i)=>{
               const a = (i/12)*Math.PI*2;
@@ -393,7 +431,7 @@
       const m = d.getMinutes();
       const s = d.getSeconds() + d.getMilliseconds()/1000;
 
-      const aH = (h + m/60) * 30;      // deg
+      const aH = (h + m/60) * 30;
       const aM = (m + s/60) * 6;
       const aS = s * 6;
 
@@ -405,6 +443,30 @@
     tick();
   }
 
+  function renderImageChannel(ch){
+    content.innerHTML = `
+      <div class="card image-card">
+        <img src="${ch.src}" alt="${ch.name}" />
+        <div class="label">${ch.name}</div>
+        <div class="sub">${nowStr()}</div>
+      </div>
+    `;
+  }
+
+  function renderKodtagChannel(){
+    content.innerHTML = `
+      <div class="card kodtag-card">
+        <a href="https://kodtag.io" target="_blank" rel="noopener noreferrer" class="kodtag-link" aria-label="Open Kodtag">
+          <div class="kodtag-logo-wrap">
+            <img src="assets/images/logo.jpg" alt="Kodtag" class="kodtag-logo" />
+          </div>
+        </a>
+        <div class="label">KODTAG</div>
+        <div class="sub">${nowStr()}</div>
+      </div>
+    `;
+  }
+
   function renderChannel(n){
     const ch = channels.find(c => c.id === n) || channels[0];
     if (!powerOn){
@@ -412,11 +474,13 @@
       return;
     }
     switch(ch.type){
-      case "clock": renderClock(); break;
-      case "test": renderTestCard(); break;
-      case "text": renderText(ch.text); break;
+      case "clock":  renderClock(); break;
+      case "test":   renderTestCard(); break;
+      case "text":   renderText(ch.text); break;
+      case "image":  renderImageChannel(ch); break;
+      case "kodtag": renderKodtagChannel(); break;
       case "static":
-      default: renderStatic(); break;
+      default:       renderStatic(); break;
     }
   }
 
@@ -433,15 +497,11 @@
     remoteCh.textContent = chLabel(current);
 
     if (!silent){
-      // switch effect: short static burst (over content)
       switchStatic.classList.add("on");
-      // Render content slightly after burst starts (gives click feel)
       setTimeout(() => {
         renderChannel(current);
         showOSD();
       }, 120);
-
-      // burst end
       setTimeout(() => switchStatic.classList.remove("on"), 320);
     } else {
       renderChannel(current);
@@ -464,8 +524,6 @@
   function drawNoise(t){
     requestAnimationFrame(drawNoise);
     if (!txtEnabled || !powerOn) return;
-
-    // Throttle a bit (smoother & less CPU)
     if (t - last < 40) return;
     last = t;
 
@@ -473,11 +531,10 @@
     const img = ctx.createImageData(w, h);
     const d = img.data;
 
-    // soft noise
     for (let i=0; i<d.length; i+=4){
       const v = (Math.random()*255) | 0;
       d[i] = v; d[i+1] = v; d[i+2] = v;
-      d[i+3] = 40; // alpha
+      d[i+3] = 40;
     }
     ctx.putImageData(img, 0, 0);
   }
@@ -492,13 +549,13 @@
   });
 
   function handleAction(a){
-    if (a === "chUp") return setChannel(current+1);
+    if (a === "chUp")   return setChannel(current+1);
     if (a === "chDown") return setChannel(current-1);
     if (a === "power"){ powerOn = !powerOn; setChannel(current,{silent:true}); showOSD(); return; }
-    if (a === "mute"){ muted = !muted; showOSD(); return; }
-    if (a === "txt"){ txtEnabled = !txtEnabled; showOSD(); return; }
-    if (a === "info"){ showOSD(); return; }
-    if (a === "test"){ setChannel(3); return; }
+    if (a === "mute"){  muted = !muted; showOSD(); return; }
+    if (a === "txt"){   window.location.href = "matrix.html"; return; }  // TTX -> matrix.html
+    if (a === "info"){  showOSD(); return; }
+    if (a === "test"){  setChannel(3); return; }
   }
 
   // keyboard

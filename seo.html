@@ -1,0 +1,112 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8" />
+<title>SEO Terminal v0.1 – Demo</title>
+
+<style>
+:root {
+  --bg: #040a06;
+  --fg: #c9fdd7;
+  --accent: #00ff88;
+}
+
+body {
+  background: var(--bg);
+  color: var(--fg);
+  font-family: "JetBrains Mono", monospace;
+  padding: 20px;
+}
+
+input,
+button {
+  background: transparent;
+  color: var(--accent);
+  border: none;
+  border-bottom: 1px solid var(--accent);
+  font-family: inherit;
+  margin-right: 8px;
+}
+
+button {
+  cursor: pointer;
+}
+
+pre {
+  white-space: pre-wrap;
+  line-height: 1.4;
+}
+
+.demo-warning {
+  color: #ff5555;
+  background: #001a00;
+  padding: 6px 10px;
+  font-size: 0.95em;
+  margin-bottom: 12px;
+  border: 1px solid #ff5555;
+  border-radius: 4px;
+  display: block;
+  white-space: normal;
+}
+
+pre.banner {
+  margin-bottom: 20px;
+}
+</style>
+
+</head>
+<body>
+
+<div class="demo-warning">
+  ⚠️ Demo mode: Results are <strong>limited</strong> and may not reflect full analysis.
+  ⚠️ Users are responsible for how they use this tool.
+  ⚠️ Danger assessment is only indicative. This tool provides a preliminary evaluation based on meta tags, infrastructure, and robots.txt. It does NOT guarantee whether a site is safe or unsafe. Users are responsible for how they act on this information.
+</div>
+
+<pre class="banner">
+███ SEO Terminal v0.1 – Demo
+$ analyze https://example.com
+</pre>
+
+<input id="url" placeholder="https://example.com" />
+<button id="run">run</button>
+
+<pre id="out"></pre>
+
+<script>
+// Cloudflare Worker base URL
+const WORKER_BASE = "https://seo-terminal-local.tdemirbag.workers.dev";
+
+document.getElementById("run").onclick = async () => {
+  const urlInput = document.getElementById("url");
+  const out = document.getElementById("out");
+
+  const url = urlInput.value.trim();
+  if (!url) {
+    out.textContent = "Please enter a URL.\n";
+    return;
+  }
+
+  out.textContent = "fetching...\n";
+
+  try {
+    const response = await fetch(
+      `${WORKER_BASE}/api/analyze?url=${encodeURIComponent(url)}`
+    );
+
+    if (!response.ok) {
+      out.textContent = `Error: ${response.status} ${response.statusText}`;
+      return;
+    }
+
+    const data = await response.json();
+    out.textContent = JSON.stringify(data, null, 2);
+
+  } catch (error) {
+    out.textContent = "Request failed:\n" + error;
+  }
+};
+</script>
+
+</body>
+</html>

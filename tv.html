@@ -17,8 +17,20 @@
       --shadow:0 18px 60px rgba(0,0,0,.55);
     }
     *{box-sizing:border-box}
-    html,body{height:100%;margin:0;background:radial-gradient(900px 700px at 30% 10%, #1b2550 0%, var(--bg) 55%, #06070b 100%); color:var(--txt); font-family: ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas, "Liberation Mono", monospace;}
-    body{display:grid; place-items:center; padding:20px; overflow:hidden;}
+    html,body{
+      height:100%;
+      margin:0;
+      background:
+        radial-gradient(900px 700px at 30% 10%, #1b2550 0%, var(--bg) 55%, #06070b 100%);
+      color:var(--txt);
+      font-family: ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas, "Liberation Mono", monospace;
+    }
+    body{
+      display:grid;
+      place-items:center;
+      padding:20px;
+      overflow:hidden;
+    }
 
     .wrap{
       width:min(1200px, 96vw);
@@ -94,11 +106,18 @@
       transition: opacity .25s ease, transform .25s ease;
       z-index:5;
       white-space:nowrap;
+      font-size:12px;
     }
     .osd.show{ opacity:1; transform: translateY(0); }
     .osd b{color:var(--accent)}
     .osd .muted{color:var(--muted)}
-    .osdRight{ margin-left:8px; padding-left:10px; border-left:1px solid rgba(255,255,255,.10); color:rgba(255,255,255,.75);}
+    .osdRight{
+      margin-left:8px;
+      padding-left:10px;
+      border-left:1px solid rgba(255,255,255,.10);
+      color:rgba(255,255,255,.75);
+      font-variant-numeric:tabular-nums;
+    }
 
     /* Remote */
     .remote{
@@ -132,16 +151,23 @@
     .rbtn{
       height:54px;
       border-radius:999px;
-      border:1px solid rgba(255,255,255,.12);
-      background: radial-gradient(140% 140% at 30% 20%, rgba(255,255,255,.08), rgba(0,0,0,.22));
+      border:1px solid rgba(255,255,255,.16);
+      background:
+        radial-gradient(140% 140% at 30% 20%, rgba(255,255,255,.10), rgba(0,0,0,.30));
       color: rgba(255,255,255,.85);
       font-size:20px;
       cursor:pointer;
-      box-shadow: inset 0 1px 0 rgba(255,255,255,.06);
+      box-shadow:
+        inset 0 1px 0 rgba(255,255,255,.08),
+        0 4px 12px rgba(0,0,0,.65);
       user-select:none;
     }
-    .rbtn:active{ transform: translateY(1px); }
-    .rbtn.power{ background: radial-gradient(120% 120% at 30% 20%, rgba(255,60,60,.45), rgba(0,0,0,.20)); border-color: rgba(255,60,60,.25); }
+    .rbtn:active{ transform: translateY(1px); box-shadow: 0 1px 4px rgba(0,0,0,.65); }
+    .rbtn.power{
+      background:
+        radial-gradient(120% 120% at 30% 20%, rgba(255,60,60,.55), rgba(0,0,0,.30));
+      border-color: rgba(255,60,60,.35);
+    }
 
     .row2{
       display:grid; grid-template-columns: 1fr 1fr; gap:10px; padding:0 8px 8px;
@@ -158,63 +184,38 @@
     }
     .legend code{ color: rgba(255,255,255,.82); }
 
-    /* Channel screens */
+    /* Channel screens – retro surveillance look */
     .card{
       width:min(680px, 100%);
       aspect-ratio: 4 / 3;
-      border-radius: 14px;
-      border:1px solid rgba(255,255,255,.08);
-      background: linear-gradient(180deg, rgba(255,255,255,.03), rgba(0,0,0,.10));
+      border-radius: 10px;
+      border:1px solid rgba(80,255,180,.38);
+      background:
+        radial-gradient(140% 120% at 50% 10%, rgba(57,160,120,.18) 0%, rgba(0,0,0,.94) 55%);
       display:grid;
       place-items:center;
       position:relative;
       overflow:hidden;
-    }
-    .label{
-      position:absolute; left:14px; bottom:12px;
-      font-size:12px; color: rgba(255,255,255,.70);
-      letter-spacing:1.2px;
-    }
-    .sub{
-      position:absolute; right:14px; bottom:12px;
-      font-size:12px; color: rgba(255,255,255,.70);
-      letter-spacing:1.2px;
+      box-shadow:
+        0 0 0 1px rgba(0,0,0,.90),
+        0 18px 40px rgba(0,0,0,.85);
     }
 
+    /* eski alt label/sub kaldırıldı – class'lar dursa da kullanılmıyor */
+    .label,
+    .sub{ display:none; }
+
     /* image-based channels */
-    .image-card img,
-    .kodtag-logo{
+    .image-card img{
       width:100%;
       height:100%;
       object-fit:cover;
       display:block;
+      filter: contrast(1.05) saturate(0.9);
     }
 
     .image-card{
-      background:#000;
-    }
-
-    /* Kodtag channel */
-    .kodtag-card{
-      background:#000;
-    }
-    .kodtag-link{
-      position:absolute;
-      inset:0;
-      display:flex;
-      align-items:center;
-      justify-content:center;
-      text-decoration:none;
-    }
-    .kodtag-logo-wrap{
-      width:120%;
-      display:flex;
-      justify-content:center;
-      animation: kodtag-pan 4s ease-in-out infinite alternate;
-    }
-    @keyframes kodtag-pan{
-      0%   { transform: translateX(-6%); }
-      100% { transform: translateX(6%); }
+      background:#020503;
     }
 
     /* “Static burst” fullscreen overlay when switching */
@@ -278,7 +279,6 @@
       <button class="rbtn" data-ch="8">8</button>
       <button class="rbtn" data-ch="9">9</button>
 
-      <!-- TXT -> TTX, data-action aynı kaldı -->
       <button class="rbtn small" data-action="txt">TTX</button>
       <button class="rbtn" data-ch="0">0</button>
       <button class="rbtn small" data-action="chDown">▼</button>
@@ -304,14 +304,17 @@
 
   // ===== Channels =====
   const channels = [
-    { id: 1, name: "STATIC",     type: "static" },
-    { id: 2, name: "BBC CLOCK",  type: "clock" },
-    { id: 3, name: "TEST CARD",  type: "test" },
-    { id: 4, name: "SERVICE",    type: "text",  text: "NO SIGNAL\\n\\nTry CH02 (clock)\\nTry CH03 (test card)\\n\\nReality: simulated.\\nCuriosity: real." },
-    { id: 5, name: "COSMIC",     type: "image", src: "assets/images/cosmic.gif" },
-    { id: 6, name: "COLOR BARS", type: "image", src: "assets/images/rainbow.gif" },
-    { id: 7, name: "KODTAG",     type: "kodtag" }
-    // ileride 8-9'a başka şeyler konur
+    { id: 1,  name: "STATIC",       type: "static" },
+    { id: 2,  name: "BBC CLOCK",    type: "clock" },
+    { id: 3,  name: "TEST CARD",    type: "test" },
+    { id: 4,  name: "BTF",          type: "image", src: "assets/images/btf.gif" },
+    { id: 5,  name: "COSMIC",       type: "image", src: "assets/images/cosmic.gif" },
+    { id: 6,  name: "DIE HARD 3",   type: "image", src: "assets/images/diehard3.gif" },
+    { id: 7,  name: "MATRIX",       type: "image", src: "assets/images/matrix.gif" },
+    { id: 8,  name: "COLOR BARS",   type: "image", src: "assets/images/rainbow.gif" },
+    { id: 9,  name: "KODTAG",       type: "image", src: "assets/images/kodtag.gif" },
+    { id: 10, name: "ROAD WARRIOR", type: "image", src: "assets/images/roadwarrior.gif" },
+    { id: 11, name: "T2",           type: "image", src: "assets/images/t2.gif" }
   ];
 
   let current = 1;
@@ -327,7 +330,7 @@
   const remoteCh = $("remoteCh");
   const switchStatic = $("switchStatic");
 
-  // ===== Clock =====
+  // ===== Clock for OSD =====
   function pad2(n){ return String(n).padStart(2,"0"); }
   function nowStr(){
     const d = new Date();
@@ -349,10 +352,7 @@
   // ===== Screens =====
   function renderStatic(){
     content.innerHTML = `
-      <div class="card" style="background:#000;">
-        <div class="label">NOISE</div>
-        <div class="sub">${nowStr()}</div>
-      </div>
+      <div class="card card--static"></div>
     `;
   }
 
@@ -360,9 +360,7 @@
     const safe = (txt || "").replace(/</g,"&lt;").replace(/>/g,"&gt;");
     content.innerHTML = `
       <div class="card" style="background:#000; place-items:start; padding:18px;">
-        <pre style="margin:0; color:rgba(255,255,255,.9); font-size:16px; line-height:1.25; white-space:pre-wrap;">${safe}</pre>
-        <div class="label">SERVICE TEXT</div>
-        <div class="sub">${nowStr()}</div>
+        <pre style="margin:0; color:rgba(180,255,210,.9); font-size:16px; line-height:1.25; white-space:pre-wrap;">${safe}</pre>
       </div>
     `;
   }
@@ -379,15 +377,13 @@
         <div style="position:absolute; bottom:58px; left:0; right:0; height:36px; display:flex; align-items:center; justify-content:center; letter-spacing:2px; font-weight:900;">
           TEST CARD • 4:3
         </div>
-        <div class="label">CALIBRATION</div>
-        <div class="sub">${nowStr()}</div>
       </div>
     `;
   }
 
   function renderClock(){
     content.innerHTML = `
-      <div class="card" style="background:#0a0b0f;">
+      <div class="card" style="background:#05070b;">
         <svg viewBox="0 0 800 600" width="100%" height="100%" style="display:block">
           <defs>
             <radialGradient id="g" cx="50%" cy="35%" r="70%">
@@ -396,7 +392,7 @@
               <stop offset="100%" stop-color="rgba(0,0,0,.55)"/>
             </radialGradient>
           </defs>
-          <rect width="800" height="600" fill="#0a0b0f"/>
+          <rect width="800" height="600" fill="#05070b"/>
           <rect width="800" height="600" fill="url(#g)" opacity=".85"/>
 
           <g transform="translate(400 250)">
@@ -415,8 +411,6 @@
           <text x="400" y="470" text-anchor="middle" fill="rgba(255,227,108,.85)" style="font-size:86px; font-family: ui-serif, Georgia, serif; letter-spacing:2px;">BBC1</text>
           <text x="400" y="535" text-anchor="middle" fill="rgba(255,227,108,.72)" style="font-size:48px; font-family: ui-serif, Georgia, serif; letter-spacing:2px;">1985-12-28</text>
         </svg>
-        <div class="label">CLOCK IDENT</div>
-        <div class="sub">${nowStr()}</div>
       </div>
     `;
 
@@ -447,22 +441,6 @@
     content.innerHTML = `
       <div class="card image-card">
         <img src="${ch.src}" alt="${ch.name}" />
-        <div class="label">${ch.name}</div>
-        <div class="sub">${nowStr()}</div>
-      </div>
-    `;
-  }
-
-  function renderKodtagChannel(){
-    content.innerHTML = `
-      <div class="card kodtag-card">
-        <a href="https://kodtag.io" target="_blank" rel="noopener noreferrer" class="kodtag-link" aria-label="Open Kodtag">
-          <div class="kodtag-logo-wrap">
-            <img src="assets/images/logo.jpg" alt="Kodtag" class="kodtag-logo" />
-          </div>
-        </a>
-        <div class="label">KODTAG</div>
-        <div class="sub">${nowStr()}</div>
       </div>
     `;
   }
@@ -478,7 +456,6 @@
       case "test":   renderTestCard(); break;
       case "text":   renderText(ch.text); break;
       case "image":  renderImageChannel(ch); break;
-      case "kodtag": renderKodtagChannel(); break;
       case "static":
       default:       renderStatic(); break;
     }

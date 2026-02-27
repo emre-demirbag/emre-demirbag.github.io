@@ -24,8 +24,8 @@
       --edge: 14px;
       --gap: 12px;
 
-      --ttx-cell-w: 16px;       /* gerekirse 15/17 dene */
-      --ttx-cell-h: 19px; 
+      --ttx-cell-w: 16px;
+      --ttx-cell-h: 19px;
     }
 
     *{ box-sizing:border-box; }
@@ -35,7 +35,6 @@
       color:var(--text);
       font-family: ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas, "Liberation Mono", monospace;
 
-      /* KEY FIX: real 3-row layout (no fixed footer overlap) */
       display:grid;
       grid-template-rows: auto 1fr auto;
       gap: 10px;
@@ -82,8 +81,7 @@
 
     /* MAIN GRID */
     main.main{
-      
-      min-height: 0; /* critical for nested flex/scroll */
+      min-height: 0;
       display:grid;
       grid-template-columns: 420px 1fr 420px;
       gap: var(--gap);
@@ -233,7 +231,7 @@
     }
     .hudChip b{ color: var(--accent2); }
 
-    /* FOOTER (NOT FIXED ANYMORE) */
+    /* FOOTER */
     footer.broadcastFooter{
       display:flex;
       flex-direction:column;
@@ -323,15 +321,15 @@
       font-weight:800;
       letter-spacing:1px;
       will-change: transform;
-      animation: ticker 58s linear infinite; /* slower */
+      animation: ticker 58s linear infinite;
     }
     @keyframes ticker{
       0%{ transform: translateX(0); }
       100%{ transform: translateX(-50%); }
     }
-   /* =========================
-       TELETEXT (AUTHENTIC FEEL)
-       
+
+    /* =========================
+       TELETEXT
     ========================= */
     @font-face{
       font-family: "TeletextMode7";
@@ -376,7 +374,6 @@
     }
     @keyframes blink{ 50%{ opacity: 0; } }
 
-    /* Teletext colors */
     .cW{ color:#fff; }
     .cC{ color:#00ffff; }
     .cG{ color:#00ff00; }
@@ -387,9 +384,8 @@
     .cO{ color:#ffb000; }
     .dim{ opacity: .75; }
 
- /* =========================
+    /* =========================
        TERMINAL
-       FIX: make it fill available panel height (no fixed px)
     ========================= */
     .term{
       width:100%;
@@ -491,7 +487,6 @@
     .btn:hover{ background: rgba(255,255,255,.10); }
     .status{ font-size: 12px; color: rgba(190,255,205,.8); }
 
-    /* Left column behavior: terminal fills remaining space */
     .leftTerminalPanel{ flex: 1 1 auto; min-height: 0; }
     .leftTerminalPanel .panel__body{ padding:12px; min-height:0;}
 
@@ -504,37 +499,35 @@
       body{ overflow:auto; height:auto; }
       main.main{ grid-template-columns: 1fr; }
 
-/* ===== OVERLAP KILLER PACK ===== */
-main.main,
-.col,
-.col--left,
-.col--center,
-.col--right,
-.panel,
-.cam,
-.panel__body,
-.cam__frame,
-.term,
-.termBody,
-.screen{
-  min-height:0;
-  min-width:0;
-}
+    /* ===== OVERLAP KILLER PACK ===== */
+    main.main,
+    .col,
+    .col--left,
+    .col--center,
+    .col--right,
+    .panel,
+    .cam,
+    .panel__body,
+    .cam__frame,
+    .term,
+    .termBody,
+    .screen{
+      min-height:0;
+      min-width:0;
+    }
 
-main.main{ overflow:hidden; }
-.panel__body{ overflow:auto; }
-.leftTerminalPanel .panel__body{ overflow:hidden; }
+    main.main{ overflow:hidden; }
+    .panel__body{ overflow:auto; }
+    .leftTerminalPanel .panel__body{ overflow:hidden; }
 
-/* height-based responsiveness */
-@media (max-height: 820px){
-  main.main{ grid-template-columns: 380px 1fr; }
-  .col--right{ display:none; }
-}
-@media (max-height: 680px){
-  main.main{ grid-template-columns: 1fr; }
-  .col--right{ display:none; }
-}
-
+    @media (max-height: 820px){
+      main.main{ grid-template-columns: 380px 1fr; }
+      .col--right{ display:none; }
+    }
+    @media (max-height: 680px){
+      main.main{ grid-template-columns: 1fr; }
+      .col--right{ display:none; }
+    }
 
     }
   </style>
@@ -648,7 +641,7 @@ main.main{ overflow:hidden; }
     </section>
   </main>
 
-  <!-- FOOTER (normal flow, no overlap) -->
+  <!-- FOOTER -->
   <footer class="broadcastFooter">
     <section class="lower">
       <div class="lower__left">
@@ -823,16 +816,16 @@ main.main{ overflow:hidden; }
         lines.push(ttxLine(""));
         lines.push(renderFragments([c("Hint: type 3 digits, press Enter.","cO")]));
         lines.push(ttxLine(""));
-      lines.push(renderFragments([
-  c("FASTTEXT: ","cW"),
-  c("RED=100 ","cR"),
-  c("GREEN=101 ","cG"),
-  c("YEL=133","cY"),
-]));
-lines.push(renderFragments([
-  c("          ","cW"),   // 10 boşluk: "FASTTEXT: " hizası
-  c("BLU=313","cB"),
-]));
+        lines.push(renderFragments([
+          c("FASTTEXT: ","cW"),
+          c("RED=100 ","cR"),
+          c("GREEN=101 ","cG"),
+          c("YEL=133","cY"),
+        ]));
+        lines.push(renderFragments([
+          c("          ","cW"),
+          c("BLU=313","cB"),
+        ]));
         lines.push(renderFragments([c("STATUS: ","cW"), c("CI RED","cR"), c(" • ","cW"), c("REALITY GREEN","cG")]));
         lines.push(ttxLine(""));
         lines.push(renderFragments([c("Secret: ","cW"), c("109","cO"), c(" (only if you deserve it)","dim")]));
@@ -968,6 +961,12 @@ lines.push(renderFragments([
         return;
       }
       if(k === "Enter"){
+        // GİZLİ 900 GEÇİDİ
+        if (TTX.input === "900") {
+          window.location.href = "tv.html";
+          return;
+        }
+
         if(TTX.input.length){
           const n = parseInt(TTX.input,10);
           ttxGo(n);
@@ -1034,7 +1033,7 @@ Try:
       promptEl.textContent = `emre@matrix:${short}$`;
     }
     function write(text){
-      screen.textContent += String(text).replace(/\\n/g,"\n") + "\n";
+      screen.textContent += String(text).replace(/\n/g,"\n") + "\n";
       screen.scrollTop = screen.scrollHeight;
     }
     function getNode(path){
@@ -1188,17 +1187,27 @@ Try:
 
       let out = "";
       switch(cmd){
-        case "help": out = cmd_help(); break;
-        case "ls": out = cmd_ls(args); break;
-        case "cd": out = cmd_cd(args); break;
-        case "cat": out = cmd_cat(args); break;
-        case "pwd": out = cmd_pwd(); break;
-        case "fortune": out = cmd_fortune(); break;
+        case "help":   out = cmd_help(); break;
+        case "ls":     out = cmd_ls(args); break;
+        case "cd":     out = cmd_cd(args); break;
+        case "cat":    out = cmd_cat(args); break;
+        case "pwd":    out = cmd_pwd(); break;
+        case "fortune":out = cmd_fortune(); break;
         case "cowsay": out = cmd_cowsay(args); break;
-        case "ping": out = cmd_ping(args); break;
+        case "ping":   out = cmd_ping(args); break;
         case "matrix": out = cmd_matrix(); break;
-        case "ttx": out = cmd_ttx(args); break;
-        case "clear": out = cmd_clear(); break;
+        case "ttx":    out = cmd_ttx(args); break;
+        case "clear":  out = cmd_clear(); break;
+
+        /* GİZLİ KOMUTLAR */
+        case "tv":
+          window.location.href = "tv.html";
+          return;
+        case "kodtag":
+          window.open("https://kodtag.io", "_blank", "noopener,noreferrer");
+          out = "Opening kodtag…";
+          break;
+
         default: out = `${cmd}: command not found`;
       }
       if(out) write(out);
@@ -1270,23 +1279,23 @@ Try:
     }
 
     function fitTeletext(){
-  const root = document.getElementById("ttxRoot");
-  const screen = document.getElementById("ttxScreen");
-  if(!root || !screen) return;
+      const root = document.getElementById("ttxRoot");
+      const screenEl = document.getElementById("ttxScreen");
+      if(!root || !screenEl) return;
 
-  const pad = 10 * 2; // --ttx-pad * 2
-  const rw = root.clientWidth - pad;
-  const rh = root.clientHeight - pad;
+      const pad = 10 * 2;
+      const rw = root.clientWidth - pad;
+      const rh = root.clientHeight - pad;
 
-  const sw = screen.offsetWidth;
-  const sh = screen.offsetHeight;
+      const sw = screenEl.offsetWidth;
+      const sh = screenEl.offsetHeight;
 
-  const s = Math.min(1, rw / sw, rh / sh);
-  screen.style.setProperty("--ttx-scale", String(s));
-}
+      const s = Math.min(1, rw / sw, rh / sh);
+      screenEl.style.setProperty("--ttx-scale", String(s));
+    }
 
-window.addEventListener("load", fitTeletext);
-window.addEventListener("resize", fitTeletext);
+    window.addEventListener("load", fitTeletext);
+    window.addEventListener("resize", fitTeletext);
 
     window.addEventListener("load", init);
   })();
